@@ -1,6 +1,6 @@
-# Checks of the frontend: formatting, types, unit tests, the production build and the browser suite against the API of the
-# backend repository (its main branch, built here). The photo-suggestion model is replaced by a stand-in
-# (GLAZELAB_VISION_MODEL=stand-in, as in the browser suite): the specs tagged @vision-real skip.
+# Checks of the frontend: formatting, types, unit tests, the production build (it downloads the photo-suggestion model from the
+# release asset and checks it) and the browser suite against the API of the backend repository (its main branch, built here).
+# The browser suite uses a stand-in for the model (GLAZELAB_VISION_MODEL=stand-in): the specs tagged @vision-real skip.
 name: CI
 
 on:
@@ -14,9 +14,6 @@ permissions:
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
-
-env:
-  GLAZELAB_VISION_MODEL: stand-in
 
 jobs:
   check:
@@ -48,6 +45,8 @@ jobs:
       fail-fast: false
       matrix:
         project: [desktop, phone]
+    env:
+      GLAZELAB_VISION_MODEL: stand-in
     steps:
       # The runner context exists in steps only, not in the job's env.
       - name: Choose the output folder

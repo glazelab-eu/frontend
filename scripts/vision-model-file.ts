@@ -13,8 +13,8 @@ export const MODEL = {
   sha256: '71c8c1153bac5abe6c54829bee3a2978bb009ad27d0cdc01a6a1cbd23a667b8d',
 } as const;
 
-/** Where a published copy of the quantised model lives; none yet, so `GLAZELAB_VISION_MODEL_URL` or a local file is needed. */
-export const DEFAULT_MODEL_URL = '';
+/** Where the published copy of the quantised model lives (a release asset of this repository); `GLAZELAB_VISION_MODEL_URL` replaces it. The download is checked against `MODEL`. */
+export const DEFAULT_MODEL_URL = 'https://github.com/glazelab-eu/frontend/releases/download/vision-model-1/model.onnx';
 
 export type ModelPin = { size: number; sha256: string };
 
