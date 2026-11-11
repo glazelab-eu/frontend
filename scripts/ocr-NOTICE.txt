@@ -1,0 +1,16 @@
+Optional browser label reader
+
+Tesseract.js 7.0.0 and Tesseract.js-core 7.0.0: Apache License 2.0.
+https://github.com/naptha/tesseract.js
+https://github.com/naptha/tesseract.js-core
+Worker bundle notices are in worker.min.js.LICENSE.txt. Tesseract.js-core compiles Tesseract OCR (Apache License 2.0,
+https://github.com/tesseract-ocr/tesseract) and Leptonica (BSD 2-Clause, leptonica-LICENSE.txt,
+https://github.com/DanBloomberg/leptonica) into its WebAssembly build.
+
+English 4.0.0_best_int trained data is distributed by @tesseract.js-data/eng 1.0.0.
+The upstream trained-data repository uses Apache License 2.0 (its licence file is model-LICENSE.txt):
+https://github.com/naptha/tessdata
+The npm language-package metadata separately identifies its wrapper as MIT:
+https://www.npmjs.com/package/@tesseract.js-data/eng
+
+These files run on the user's device. Packaging photos are not part of this distribution.

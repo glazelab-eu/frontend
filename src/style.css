@@ -1,0 +1,423 @@
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  --ink: #30463e;
+  --muted: #5a6a63;
+  --accent: #3f6b5b;
+  --canvas: #f7f8f4;
+  --surface: #fffefa;
+  --border: #dce2d9;
+  --sage: #e2ece1;
+  --peach: #f3e2d7;
+  --blue: #e0ebf0;
+  --paper: #fff;
+  --accent-hover: #305746;
+  --focus: #719688;
+  --focus-halo: #dceade;
+  --control-border: #87928b;
+  --warning-bg: #f5e8d4;
+  --warning-ink: #755439;
+  --danger-bg: #fbe5df;
+  --danger-ink: #8b4435;
+  --danger-hover: #6f362a;
+  --warm-ink: #8c6b56;
+  --favorite-bg: #fff0d8;
+  --favorite-ink: #825225;
+  --backdrop: #12292299;
+  --shadow-color: #0c241f55;
+  /* The full-screen photo viewer (images/PhotoViewer): its ground, text, secondary text, round controls and their rim (lib/layout/contrast.test.ts). */
+  --viewer-bg: #101a16;
+  --viewer-ink: #f7f8f4;
+  --viewer-muted: #c5d0c9;
+  --viewer-control: #1d2e27;
+  --viewer-line: #8fa398;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 999rem;
+  --font-xs: 0.75rem;
+  --font-sm: 0.8125rem;
+  --font-base: 0.875rem;
+  --font-md: 0.9375rem;
+  --font-body: 1rem;
+  --font-lg: 1.25rem;
+  --font-xl: 1.375rem;
+  --font-2xl: 1.75rem;
+  --font-3xl: 2.25rem;
+  --space-0-5: 0.125rem;
+  --space-1: 0.25rem;
+  --space-1-5: 0.375rem;
+  --space-2: 0.5rem;
+  --space-2-5: 0.625rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-9: 2.25rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  /* The touch minimum (44 px): on touch screens (a coarse primary pointer, see the end of this file) every control is at least this wide and tall. */
+  --touch-target: 2.75rem;
+  --touch-target-compact: 2.5rem;
+  /* Height of a filter bar control (search field, scan button, compact combobox). */
+  --control-height: 2.6875rem;
+  /* Room kept below a focused field while a sticky bar covers the foot of the screen. */
+  --sticky-bar-clearance: 9rem;
+  /* The system bars' insets: the app draws edge-to-edge (`viewport-fit=cover`), so anything fixed to an edge keeps clear of them. THE one place
+     that reads `env()`: every rule uses these variables (0 where the window has no inset, so desktop is unchanged); the e2e suite overrides
+     them to emulate a phone's bars. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  /* The phone bottom navigation: its height, and what the page keeps clear below its content (the bar, its 1 px top border and the home-indicator
+     inset). Both scale with the text size (rem); the labels wrap inside the bar, which never grows past the clearance. */
+  --bottom-nav-height: 3.5rem;
+  --bottom-nav-clearance: calc(var(--bottom-nav-height) + 0.0625rem + var(--safe-bottom));
+  /* Stacking: the Studio bar and the bottom navigation never show together; popups open over both; toasts and dialogs are above everything. */
+  --z-sticky-bar: 2;
+  --z-bottom-nav: 3;
+  --z-popup: 5;
+  /* The sticky header covers a popup that is scrolled under it, and is covered by toasts and dialogs. */
+  --z-header: 6;
+  --z-toast: 10;
+  --z-modal: 20;
+  /* Gap between adjacent touch targets and between a destructive and a constructive button (dialog footers, delete beside save). */
+  --touch-gap: var(--space-4);
+  color: var(--ink);
+  background: var(--canvas);
+  font-synthesis: none;
+  line-height: 1.5;
+  /* Keep the width fixed when a page grows long enough to scroll. */
+  scrollbar-gutter: stable;
+  /* The sticky header (`layout/AppNav`, `watchHeader` sets `--header-height`, 0 until measured): a focused field or a scrolled-to target is
+     kept clear of it even while it is slid away, since it returns on the first scroll up. `--header-offset` is where the room below it
+     begins: what sticks under the header (the update notice, the detail pages' gallery) uses it, so it follows the header out and in. */
+  --header-offset: var(--header-height, 0px);
+  scroll-padding-top: calc(var(--header-height, 0px) + var(--space-3));
+}
+/* The full-screen photo viewer: the page ground behind it is dark too, so the system navigation bar of an installed Android app (tinted from it) matches. */
+:root:has(.modal--viewer) {
+  background-color: var(--viewer-bg);
+}
+@media (width < 70em) {
+  :root:has(.app-nav--hidden) {
+    --header-offset: 0px;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 20rem;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 0.1875rem solid var(--focus);
+  outline-offset: 0.1875rem;
+}
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+.eyebrow {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.01875rem;
+}
+/* One look for every button, `<a>` and `<button>` alike: no underline, and a visible boundary (3:1, `--control-border`) so a secondary button reads as one. */
+.button {
+  background: var(--surface);
+  color: var(--ink);
+  border: 0.0625rem solid var(--control-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2-5) var(--space-4);
+  font-size: var(--font-base);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.button--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper);
+}
+.button--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.button--danger {
+  background: var(--danger-ink);
+  border-color: var(--danger-ink);
+  color: var(--paper);
+}
+.button--danger:hover:not(:disabled) {
+  background: var(--danger-hover);
+  border-color: var(--danger-hover);
+}
+/* One look for every button that shows only a glyph (`ui/Icon`), as `.button` is for text; the label is its `aria-label`. A component keeps its own
+   markup and states, adds this class and adds only placement or a size its container dictates. Focus is the global `button:focus-visible` ring. */
+.icon-button {
+  --icon-size: 1.5rem;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--touch-target-compact);
+  height: var(--touch-target-compact);
+  padding: 0;
+  border: 0.0625rem solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--accent);
+}
+.icon-button__glyph {
+  width: var(--icon-size);
+  height: var(--icon-size);
+}
+.icon-button:hover:not(:disabled, [aria-disabled='true']) {
+  border-color: currentColor;
+}
+.icon-button:active:not(:disabled, [aria-disabled='true']) {
+  box-shadow: inset 0 0 0 0.0625rem currentColor;
+}
+.icon-button[aria-pressed='true'] {
+  border-color: var(--favorite-ink);
+  background: var(--favorite-bg);
+  color: var(--favorite-ink);
+}
+/* Stays focusable and says why it cannot act; `disabled` is the global `button:disabled`. */
+.icon-button[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* No box until the pointer is on it: inside a toast, a dialog's corner, a row that has a box of its own, the header. */
+.icon-button--quiet {
+  border-color: transparent;
+  background: none;
+}
+/* Over a photo: small and round, a light disc that reads on any picture. */
+.icon-button--overlay {
+  --icon-size: 1rem;
+  width: 2rem;
+  height: 2rem;
+  border-color: var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+}
+/* Over the viewer's dark ground: round, 44 px with every pointer (it is used with fingers and mice alike). */
+.icon-button--viewer {
+  width: var(--touch-target);
+  height: var(--touch-target);
+  border-color: var(--viewer-line);
+  border-radius: var(--radius-pill);
+  background: var(--viewer-control);
+  color: var(--viewer-ink);
+}
+.icon-button--viewer:focus-visible {
+  outline-color: var(--viewer-ink);
+  outline-offset: 0.125rem;
+}
+/* One row of buttons (dialog footers, page and card actions): wraps, --space-2 apart, --touch-gap on touch screens (end of file).
+   A host adds only what its row has of its own (margins, a border, another alignment), never wrap or gap (`button-rows.test.ts`). */
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.button-row--end {
+  justify-content: flex-end;
+}
+/* Read by screen readers, never shown (live regions, labels a compact control hides). */
+.visually-hidden {
+  position: absolute;
+  width: 0.0625rem;
+  height: 0.0625rem;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.step-number {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--sage);
+  color: var(--ink);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+.empty-state {
+  min-height: 14.375rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--muted);
+  background: var(--surface);
+}
+.empty-state__icon {
+  font-size: var(--font-3xl);
+  color: var(--accent);
+}
+.empty-state__illustration {
+  border-radius: var(--radius-lg);
+}
+.empty-state__title {
+  font-weight: 600;
+  font-size: var(--font-xl);
+  color: var(--ink);
+  margin: var(--space-4) 0 var(--space-2);
+}
+.empty-state__description {
+  font-size: var(--font-base);
+  max-width: 27.5rem;
+  line-height: 1.6;
+}
+.empty-state__action {
+  margin-top: var(--space-2);
+  text-decoration: none;
+}
+.layout-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+.panel {
+  background: var(--surface);
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+.form-field {
+  display: block;
+  font-size: var(--font-base);
+  font-weight: 550;
+  color: var(--ink);
+  margin-bottom: var(--space-4);
+}
+.form-field__optional {
+  font-weight: 400;
+  color: var(--muted);
+}
+.form-field__control {
+  width: 100%;
+  display: block;
+  margin-top: var(--space-1-5);
+  border: 0.0625rem solid var(--control-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2-5) var(--space-3);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--font-md);
+  min-height: var(--touch-target);
+}
+.form-field__control:focus {
+  border-color: var(--accent);
+}
+.form-field__control--multiline {
+  resize: vertical;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+.panel__message {
+  font-size: var(--font-base);
+  color: var(--muted);
+  line-height: 1.6;
+}
+@media (width < 45em) {
+  .layout-columns {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .panel {
+    padding: var(--space-5);
+  }
+}
+/* The photo viewer covers the screen: the page behind does not scroll, and its scrollbar and the gutter kept for it go too, so the overlay really fills the screen. */
+:root:has(.modal--viewer) {
+  overflow: hidden;
+  scrollbar-gutter: auto;
+  /* A swipe from the screen's edge steps through the photos, it does not navigate back. */
+  overscroll-behavior: none;
+}
+/* Touch screens (the primary pointer is coarse, whatever the window width): 16 px body text, which also stops iOS zooming into a focused field,
+   and default targets of --touch-target; compact browsing controls opt into --touch-target-compact. Component styles add their own pointer: coarse blocks for sizes and gaps. */
+@media (pointer: coarse) {
+  :root {
+    --font-xs: 0.875rem;
+    --font-sm: var(--font-body);
+    --font-base: var(--font-body);
+    --font-md: var(--font-body);
+    --control-height: var(--touch-target);
+    /* Studio's sticky bar is taller with 16 px buttons: the add-step and save rows wrap in German and Portuguese. */
+    --sticky-bar-clearance: 14rem;
+  }
+  /* The 16 px label may need two lines on a narrow phone; a button never outgrows its container. */
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    min-height: var(--touch-target);
+    white-space: normal;
+    text-align: center;
+  }
+  .button--compact {
+    min-height: var(--touch-target-compact);
+    min-width: var(--touch-target-compact);
+    padding: var(--space-1-5) var(--space-3);
+  }
+  .icon-button {
+    width: var(--touch-target);
+    height: var(--touch-target);
+  }
+  /* A destructive button keeps --touch-gap from a constructive one; every row keeps it, so no row needs to know. */
+  .button-row {
+    gap: var(--touch-gap);
+  }
+  .form-field__optional {
+    font-size: 1em;
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Source of all app icons: scripts/generate-icons.py renders the PNG and ICO files from it. -->
+  <!-- A little clay cow figurine, its lower half dipped in glaze, a drop hanging from one hoof. -->
+  <defs>
+    <path id="body" d="M144 196H316C338 196 356 214 356 236V312C356 324 346 332 336 334V392C336 401 329 408 320 408H300C291 408 284 401 284 392V340H176V392C176 401 169 408 160 408H140C131 408 124 401 124 392V334C114 332 104 324 104 312V236C104 214 122 196 144 196Z"/>
+    <rect id="head" x="296" y="136" width="150" height="104" rx="48"/>
+    <clipPath id="body-clip"><use href="#body"/></clipPath>
+    <clipPath id="head-clip"><use href="#head"/></clipPath>
+  </defs>
+  <rect id="background" width="512" height="512" rx="104" fill="#e2ece1"/>
+  <g id="figurine" transform="translate(-4 -24)" stroke="#30463e" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M108 236C84 250 76 276 82 304" fill="none" stroke-width="18"/>
+    <use href="#body" fill="#f3e2d7" stroke="none"/>
+    <g clip-path="url(#body-clip)" stroke="none">
+      <path d="M150 196C170 196 200 206 206 230C212 254 180 268 154 260C128 252 118 222 150 196Z" fill="#30463e"/>
+      <path d="M90 300C140 284 170 312 220 298S300 280 370 296V420H90Z" fill="#3f6b5b"/>
+    </g>
+    <use href="#body" fill="none" stroke-width="18"/>
+    <path d="M294 396C298 414 292 422 292 436A18 18 0 0 0 328 436C328 422 322 414 326 396Z" fill="#3f6b5b" stroke="none"/>
+    <path d="M296 404C298 416 292 424 292 436A18 18 0 0 0 328 436C328 424 322 416 324 404" fill="none" stroke-width="14"/>
+    <path d="M334 144C334 120 342 104 356 96C362 112 362 128 358 142" fill="#fffefa" stroke-width="18"/>
+    <path d="M306 168C288 150 262 146 246 158C260 178 284 186 306 182Z" fill="#f3e2d7" stroke-width="18"/>
+    <use href="#head" fill="#f3e2d7" stroke="none"/>
+    <rect x="396" y="136" width="60" height="104" fill="#fffefa" stroke="none" clip-path="url(#head-clip)"/>
+    <use href="#head" fill="none" stroke-width="18"/>
+    <circle cx="352" cy="178" r="13" fill="#30463e" stroke="none"/>
+    <circle cx="426" cy="192" r="9" fill="#30463e" stroke="none"/>
+  </g>
+</svg>

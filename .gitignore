@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+*.local
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+*.swp
+test-results/
+playwright-report/
+
+# The photo-suggestion model is obtained at build time (scripts/vision-model-file.ts), never committed.
+/models/vision/model.onnx
+/models/vision/model.onnx.download

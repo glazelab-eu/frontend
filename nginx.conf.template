@@ -1,0 +1,268 @@
+# Template: the nginx image's entrypoint substitutes ${NGINX_LOCAL_RESOLVERS} into conf.d/default.conf.
+# Traefik (or a host reverse proxy) terminates TLS and supplies X-Forwarded-Proto.
+map $http_x_forwarded_proto $forwarded_proto {
+    default $scheme;
+    https https;
+}
+
+# Shared cache for PUBLIC images only. The API marks them "public, max-age=31536000, immutable"; club and
+# private images are "private, max-age=604800, immutable" (the viewer's browser only, with X-Accel-Expires: 0),
+# and errors are uncacheable. An entry is stored only when the API says public AND the request carried no cookie
+# or Authorization header, so it never holds a session's view. Clear-Site-Data from the API (`/api/auth/clear-cache`) passes through.
+proxy_cache_path /var/cache/nginx/glazelab-images levels=1:2 keys_zone=glazelab_images:10m
+                 max_size=1g inactive=30d use_temp_path=off;
+
+map $upstream_http_cache_control $glazelab_not_public {
+    "~*(^|[\s,])public([\s,]|$)" 0;
+    default 1;
+}
+
+# Re-resolve the API service after its container is recreated (the upstream's "resolve" below needs a resolver
+# at this level). The image's entrypoint renders this template with the container's own nameservers
+# (Docker: 127.0.0.11, Podman: the network gateway).
+resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
+
+# Scanner noise (WordPress, Joomla, .env probes): unknown file-like paths and known scanner prefixes get a tiny 404
+# that is slowed per client, so a bot doing 20 requests a second gets about 2. This is the one proxy-level limit
+# (the API owns /api/). Unknown extensionless paths (/start, /clubs) still get the app shell; the router maps them
+# to hash routes. The zone key is $remote_addr (the real client address from X-Forwarded-For where set_real_ip_from
+# applies, as the API's limiter sees it).
+limit_req_zone $binary_remote_addr zone=glazelab_scanners:10m rate=2r/s;
+
+map $uri $glazelab_fallback {
+    default /index.html;
+    "~\.[^/]*$" /glazelab-not-found;
+}
+
+# Keep-alive connections to the API: without them every request opens a new TCP connection and Nginx runs out of
+# local ports (TIME_WAIT) above about 470 requests per second. The idle timeout stays below Tomcat's (60 s), so
+# Nginx never reuses a connection the API has just closed. max_fails=0: with one server Nginx must not mark it
+# down for 10 s after a few failed requests during an API restart; it tries again on the next request. The zone
+# is required by "resolve".
+upstream glazelab_api {
+    zone glazelab_api 64k;
+    server api:8080 resolve max_fails=0;
+    keepalive 32;
+    keepalive_timeout 30s;
+}
+
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+    # Request bodies: JSON stays small (the API refuses more than 128 KB too, backend guide "Security"); only the
+    # upload location below takes the 12 MB multipart requests.
+    client_max_body_size 128k;
+
+    # Compress public static assets, including lazy scanner WASM, even behind a proxy.
+    # The language model (.gz) and JPEG photos are already compressed and excluded by MIME type.
+    gzip on;
+    gzip_comp_level 6;
+    gzip_min_length 1024;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_types text/css application/javascript application/json application/manifest+json image/svg+xml application/wasm;
+
+    # Same-origin app assets, blob photos/camera streams and the barcode WebAssembly fallback.
+    # Inline/evaluated JavaScript stays blocked. Repeat all headers where a location adds its own.
+    set $glazelab_csp "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+
+    add_header X-Robots-Tag "noindex, nofollow" always;
+    add_header Content-Security-Policy $glazelab_csp always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer" always;
+    add_header Permissions-Policy "camera=(self), microphone=(), geolocation=()" always;
+
+    # Behind Traefik (or another proxy on a private network) take the client IP from X-Forwarded-For;
+    # Traefik replaces any client-supplied value. Pass only that address on and drop the other
+    # forwarding headers, so the API (prod profile) cannot be told a forged address or host.
+    set_real_ip_from 10.0.0.0/8;
+    set_real_ip_from 172.16.0.0/12;
+    set_real_ip_from 192.168.0.0/16;
+    set_real_ip_from 127.0.0.1;
+    real_ip_header X-Forwarded-For;
+    real_ip_recursive on;
+    # Keep all proxy headers at this level: a location override would discard the inherited set.
+    # HTTP/1.1 with an empty Connection header is what lets the upstream keep-alive connections work.
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Accept-Encoding "";
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $forwarded_proto;
+    proxy_set_header X-Forwarded-Host "";
+    proxy_set_header X-Forwarded-Port "";
+    proxy_set_header X-Forwarded-Prefix "";
+    proxy_set_header Forwarded "";
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # API JSON depends on the session and is never cached here, nor are profile pictures (/api/avatars/: signed-in
+    # only, "private" with X-Accel-Expires: 0; JPEG is not in gzip_types). Compressed by default (it is large and
+    # repetitive); BREACH rule: never compress an answer that carries a secret (session or CSRF token,
+    # password-reset or verification token, anything single-use) or reflects request text. A new endpoint
+    # with such a body gets its own "gzip off" location, like /api/auth/ here. The API itself stays
+    # uncompressed (Accept-Encoding is dropped above), so this is the only place that compresses.
+    location /api/ {
+        error_page 413 @glazelab_too_large;
+        gzip on;
+        gzip_comp_level 6;
+        gzip_types application/json;
+        gzip_vary on;
+        gzip_proxied any;
+        proxy_pass http://glazelab_api;
+    }
+
+    # Uploads (photos of combinations and glazes, profile pictures, feedback with photos): the only bodies above the
+    # 128 KB cap. Otherwise exactly like /api/.
+    location ~ ^/api/((combinations|glazes)/[^/]+/images|avatars|feedback)$ {
+        error_page 413 @glazelab_too_large;
+        client_max_body_size 13m;
+        gzip on;
+        gzip_comp_level 6;
+        gzip_types application/json;
+        gzip_vary on;
+        gzip_proxied any;
+        proxy_pass http://glazelab_api;
+    }
+
+    # Tokens and credentials: never compressed (BREACH).
+    location /api/auth/ {
+        error_page 413 @glazelab_too_large;
+        gzip off;
+        proxy_pass http://glazelab_api;
+    }
+
+    # JPEGs gain nothing from compression.
+    location /api/images/ {
+        error_page 413 @glazelab_too_large;
+        gzip off;
+        proxy_pass http://glazelab_api;
+        proxy_cache glazelab_images;
+        # Versioned key retires entries cached before the 60-second deletion bound. The card copy
+        # (/api/images/<id>/card) is its own path, so the full size and the card never share an entry.
+        proxy_cache_key "v2:$request_uri";
+        proxy_cache_methods GET HEAD;
+        proxy_cache_bypass $http_cookie $http_authorization;
+        proxy_no_cache $http_cookie $http_authorization $glazelab_not_public;
+        proxy_cache_lock on;
+        # X-Accel-Expires from the API caps public proxy hits at 60 seconds.
+        proxy_cache_use_stale off;
+        add_header X-Cache-Status $upstream_cache_status always;
+        add_header X-Robots-Tag "noindex, nofollow" always;
+        add_header Content-Security-Policy $glazelab_csp always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Permissions-Policy "camera=(self), microphone=(), geolocation=()" always;
+    }
+
+    # Vite and Workbox file names contain content hashes.
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Robots-Tag "noindex, nofollow" always;
+        add_header Content-Security-Policy $glazelab_csp always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Permissions-Policy "camera=(self), microphone=(), geolocation=()" always;
+    }
+
+    location ~ ^/workbox-[0-9a-f]+\.js$ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Robots-Tag "noindex, nofollow" always;
+        add_header Content-Security-Policy $glazelab_csp always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Permissions-Policy "camera=(self), microphone=(), geolocation=()" always;
+    }
+
+    # Unhashed entry points are revalidated on every load so a deploy takes effect.
+    location = /sw.js {
+        try_files $uri =404;
+        add_header Cache-Control "no-cache";
+        add_header X-Robots-Tag "noindex, nofollow" always;
+        add_header Content-Security-Policy $glazelab_csp always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Permissions-Policy "camera=(self), microphone=(), geolocation=()" always;
+    }
+
+    location = /manifest.webmanifest {
+        types { application/manifest+json webmanifest; }
+        try_files $uri =404;
+        add_header Cache-Control "no-cache";
+        add_header X-Robots-Tag "noindex, nofollow" always;
+        add_header Content-Security-Policy $glazelab_csp always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Permissions-Policy "camera=(self), microphone=(), geolocation=()" always;
+    }
+
+    location / {
+        try_files $uri $uri/ $glazelab_fallback;
+        add_header Cache-Control "no-cache";
+        add_header X-Robots-Tag "noindex, nofollow" always;
+        add_header Content-Security-Policy $glazelab_csp always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Permissions-Policy "camera=(self), microphone=(), geolocation=()" always;
+    }
+
+    # Scanner prefixes, whatever they end in.
+    location ~* ^/(wp-|wordpress|administrator|xmlrpc|phpmyadmin|cgi-bin|\.git|\.env|vendor|actuator|boaform) {
+        rewrite ^ /glazelab-not-found last;
+    }
+
+    # The stalled 404. limit_req runs in the preaccess phase, which "return" (rewrite phase) would skip, so the
+    # location ends in try_files and the tiny body comes from @glazelab_gone. Burst 20 without nodelay delays up
+    # to 20 requests (0.5 s each), 429 beyond that. limit_req_log_level info keeps the delayed and rejected
+    # notices out of the error log (the access log has every request once).
+    location = /glazelab-not-found {
+        internal;
+        limit_req zone=glazelab_scanners burst=20;
+        limit_req_status 429;
+        limit_req_log_level info;
+        error_page 404 @glazelab_gone;
+        try_files /glazelab-nothing =404;
+    }
+
+    # A body over client_max_body_size answers like the API's own refusal (the same ErrorView body, which the app
+    # translates), not Nginx's HTML page. Every /api/ location names it.
+    location @glazelab_too_large {
+        default_type application/json;
+        add_header Cache-Control "no-store" always;
+        add_header X-Robots-Tag "noindex, nofollow" always;
+        add_header Content-Security-Policy $glazelab_csp always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Permissions-Policy "camera=(self), microphone=(), geolocation=()" always;
+        return 413 '{"error":"This request is too large."}';
+    }
+
+    location @glazelab_gone {
+        default_type text/plain;
+        add_header Cache-Control "no-store" always;
+        add_header X-Robots-Tag "noindex, nofollow" always;
+        add_header Content-Security-Policy $glazelab_csp always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Permissions-Policy "camera=(self), microphone=(), geolocation=()" always;
+        return 404 "not found\n";
+    }
+}

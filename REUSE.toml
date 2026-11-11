@@ -1,0 +1,67 @@
+version = 1
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 The Glazelab authors"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+# The client runtime that @hey-api/openapi-ts copies into the generated code (types.gen.ts and sdk.gen.ts are generated
+# from this project's API and stay AGPL).
+[[annotations]]
+path = ["src/lib/generated/client/**", "src/lib/generated/core/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "Hey API"
+SPDX-License-Identifier = "MIT"
+
+# TinyCLIP image tower (Microsoft, MIT), quantised by scripts/vision-model.py; notice in scripts/vision-NOTICE.txt.
+# Planned to leave git and become a build-time download.
+[[annotations]]
+path = "models/vision/model.onnx"
+precedence = "override"
+SPDX-FileCopyrightText = "Microsoft Corporation"
+SPDX-License-Identifier = "MIT"
+
+# Wikimedia Commons photos dedicated to the public domain; sources and authors in e2e/fixtures/README.md.
+[[annotations]]
+path = "e2e/fixtures/jug-photo.jpg"
+precedence = "override"
+SPDX-FileCopyrightText = "The Metropolitan Museum of Art (Cincinnati Pottery Club Incised Pitcher MET DP216218, Wikimedia Commons)"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "e2e/fixtures/mug-photo-2.jpg"
+precedence = "override"
+SPDX-FileCopyrightText = "Alf van Beem (Droste beker foto7, Wikimedia Commons)"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "e2e/fixtures/mug-photo.jpg"
+precedence = "override"
+SPDX-FileCopyrightText = "Tetzemann (Entenbecher, Wikimedia Commons)"
+SPDX-License-Identifier = "CC0-1.0"
+
+# Third-party licence texts and notices, copied unchanged from their projects.
+[[annotations]]
+path = ["scripts/notices/zxing-cpp-LICENSE.txt"]
+precedence = "override"
+SPDX-FileCopyrightText = "zxing-cpp authors"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["scripts/notices/tessdata-LICENSE.txt"]
+precedence = "override"
+SPDX-FileCopyrightText = "tessdata authors"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "scripts/notices/leptonica-LICENSE.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "2001-2020 Leptonica"
+SPDX-License-Identifier = "BSD-2-Clause"
+
+[[annotations]]
+path = ["scripts/notices/onnxruntime-LICENSE.txt", "scripts/notices/onnxruntime-ThirdPartyNotices.txt"]
+precedence = "override"
+SPDX-FileCopyrightText = "Microsoft Corporation"
+SPDX-License-Identifier = "MIT"

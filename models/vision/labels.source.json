@@ -1,0 +1,169 @@
+{
+  "note": "The vocabulary of the photo suggestions (33-1). The prompts are English: the text encoders of the candidate models are English-only and never ship; localisation is only in `tags`. A label without `tags` is never suggested: it competes for the probability of the others, so a photo of something else (a person, a landscape, a jar) yields no chip. Edit, then run scripts/vision-model.py to refresh labels.json.",
+  "labels": [
+    {
+      "id": "mug",
+      "tags": {
+        "en": "mug",
+        "de": "becher",
+        "pt-PT": "caneca",
+        "it": "mug",
+        "es": "mug"
+      },
+      "prompts": ["a photo of a mug", "a photo of a ceramic coffee mug", "a handmade pottery mug"]
+    },
+    {
+      "id": "cup",
+      "tags": {
+        "en": "cup",
+        "de": "tasse",
+        "pt-PT": "chávena",
+        "it": "tazza",
+        "es": "taza"
+      },
+      "prompts": ["a photo of a cup", "a photo of a ceramic tea cup", "a handmade pottery cup"]
+    },
+    {
+      "id": "bowl",
+      "tags": {
+        "en": "bowl",
+        "de": "schale",
+        "pt-PT": "tigela",
+        "it": "ciotola",
+        "es": "cuenco"
+      },
+      "prompts": ["a photo of a bowl", "a photo of a ceramic bowl", "a handmade pottery bowl"]
+    },
+    {
+      "id": "plate",
+      "tags": {
+        "en": "plate",
+        "de": "teller",
+        "pt-PT": "prato",
+        "it": "piatto",
+        "es": "plato"
+      },
+      "prompts": ["a photo of a plate", "a photo of a ceramic plate", "a handmade pottery plate"]
+    },
+    {
+      "id": "vase",
+      "tags": {
+        "en": "vase",
+        "de": "vase",
+        "pt-PT": "vaso",
+        "it": "vaso",
+        "es": "jarrón"
+      },
+      "prompts": ["a photo of a vase", "a photo of a ceramic vase", "a handmade pottery vase"]
+    },
+    {
+      "id": "jug",
+      "tags": {
+        "en": "jug",
+        "de": "krug",
+        "pt-PT": "jarro",
+        "it": "brocca",
+        "es": "jarra"
+      },
+      "prompts": ["a photo of a jug", "a photo of a ceramic pitcher", "a handmade pottery jug"]
+    },
+    {
+      "id": "teapot",
+      "tags": {
+        "en": "teapot",
+        "de": "teekanne",
+        "pt-PT": "bule",
+        "it": "teiera",
+        "es": "tetera"
+      },
+      "prompts": ["a photo of a teapot", "a photo of a ceramic teapot", "a handmade pottery teapot"]
+    },
+    {
+      "id": "planter",
+      "tags": {
+        "en": "planter",
+        "de": "blumentopf",
+        "pt-PT": "floreira",
+        "it": "fioriera",
+        "es": "maceta"
+      },
+      "prompts": ["a photo of a planter", "a photo of a ceramic flower pot", "a handmade pottery planter with a plant"]
+    },
+    {
+      "id": "tile",
+      "tags": {
+        "en": "tile",
+        "de": "fliese",
+        "pt-PT": "azulejo",
+        "it": "piastrella",
+        "es": "azulejo"
+      },
+      "prompts": ["a photo of a tile", "a photo of a glazed ceramic tile", "a photo of a decorative wall tile"]
+    },
+    {
+      "id": "tray",
+      "tags": {
+        "en": "tray",
+        "de": "tablett",
+        "pt-PT": "tabuleiro",
+        "it": "vassoio",
+        "es": "bandeja"
+      },
+      "prompts": ["a photo of a tray", "a photo of a ceramic tray", "a handmade pottery serving tray"]
+    },
+    {
+      "id": "dish",
+      "tags": {
+        "en": "dish",
+        "de": "platte",
+        "pt-PT": "travessa",
+        "it": "piatto-da-portata",
+        "es": "fuente"
+      },
+      "prompts": ["a photo of a dish", "a photo of a small ceramic dish", "a handmade pottery serving dish"]
+    },
+    {
+      "id": "sake-cup",
+      "tags": {
+        "en": "sake-cup",
+        "de": "sake-becher",
+        "pt-PT": "copo-de-saqué",
+        "it": "tazza-da-sakè",
+        "es": "taza-de-sake"
+      },
+      "prompts": ["a photo of a sake cup", "a photo of a small ceramic sake cup", "a photo of a japanese tea bowl"]
+    },
+    {
+      "id": "other-person",
+      "prompts": ["a photo of a person", "a portrait of a man"]
+    },
+    {
+      "id": "other-room",
+      "prompts": ["a photo of a room interior", "a photo of a pottery studio with a kiln"]
+    },
+    {
+      "id": "other-landscape",
+      "prompts": ["a photo of a landscape", "a photo of a street"]
+    },
+    {
+      "id": "other-picture",
+      "prompts": ["a painting", "a poster with text", "a black and white photograph"]
+    },
+    {
+      "id": "other-food",
+      "prompts": ["a photo of food", "a photo of coffee beans"]
+    },
+    {
+      "id": "other-jar",
+      "prompts": ["a photo of a jar with a lid", "a photo of a bottle"]
+    },
+    {
+      "id": "other-sculpture",
+      "prompts": ["a photo of a sculpture", "a photo of a figurine"]
+    },
+    {
+      "id": "other-many",
+      "prompts": ["a photo of many pots on a shelf", "a photo of a stack of ceramic objects"]
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+[
+  {
+    "input": " in 1036 ",
+    "normalized": "IN-1036",
+    "valid": true
+  },
+  {
+    "input": "pc /-- 20",
+    "normalized": "PC-20",
+    "valid": true
+  },
+  {
+    "input": "pc-20",
+    "normalized": "PC-20",
+    "valid": true
+  },
+  {
+    "input": "BO-9.1",
+    "normalized": "BO-9.1",
+    "valid": true
+  },
+  {
+    "input": "9353",
+    "normalized": "9353",
+    "valid": true
+  },
+  {
+    "input": " pc\t20 ",
+    "normalized": "PC-20",
+    "valid": true
+  },
+  {
+    "input": "\u00a0pc\u00a020\u00a0",
+    "normalized": "PC-20",
+    "valid": true
+  },
+  {
+    "input": "\ufeffpc/20\ufeff",
+    "normalized": "PC-20",
+    "valid": true
+  },
+  {
+    "input": "\u0085pc 20\u0085",
+    "normalized": "PC-20",
+    "valid": true
+  },
+  {
+    "input": "pc//20",
+    "normalized": "PC-20",
+    "valid": true
+  },
+  {
+    "input": "  ",
+    "normalized": "",
+    "valid": false
+  },
+  {
+    "input": "pc_20",
+    "normalized": "PC_20",
+    "valid": false
+  },
+  {
+    "input": "PC..20",
+    "normalized": "PC..20",
+    "valid": false
+  },
+  {
+    "input": "PC /",
+    "normalized": "PC-",
+    "valid": false
+  },
+  {
+    "input": "-20",
+    "normalized": "-20",
+    "valid": false
+  },
+  {
+    "input": "PC/ /",
+    "normalized": "PC-",
+    "valid": false
+  },
+  {
+    "input": "\uff30\uff23 20",
+    "normalized": "\uff30\uff23-20",
+    "valid": false
+  },
+  {
+    "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "normalized": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "valid": true
+  },
+  {
+    "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "normalized": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "valid": false
+  }
+]
