@@ -48,9 +48,10 @@ jobs:
       fail-fast: false
       matrix:
         project: [desktop, phone]
-    env:
-      GLAZELAB_E2E_OUTPUT: ${{ runner.temp }}/e2e-${{ matrix.project }}
     steps:
+      # The runner context exists in steps only, not in the job's env.
+      - name: Choose the output folder
+        run: echo "GLAZELAB_E2E_OUTPUT=$RUNNER_TEMP/e2e-${{ matrix.project }}" >> "$GITHUB_ENV"
       # Siblings, as the suite expects them: ../backend/target/glazelab-0.1.0.jar.
       - uses: actions/checkout@v4
         with:
