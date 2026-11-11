@@ -1,0 +1,93 @@
+# Checks of the frontend: formatting, types, unit tests, the production build and the browser suite against the API of the
+# backend repository (its main branch, built here). The photo-suggestion model is replaced by a stand-in
+# (GLAZELAB_VISION_MODEL=stand-in, as in the browser suite): the specs tagged @vision-real skip.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GLAZELAB_VISION_MODEL: stand-in
+
+jobs:
+  check:
+    name: Format, types, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  licences:
+    name: REUSE licence check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: fsfe/reuse-action@v5
+
+  e2e:
+    name: Browser tests (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop, phone]
+    env:
+      GLAZELAB_E2E_OUTPUT: ${{ runner.temp }}/e2e-${{ matrix.project }}
+    steps:
+      # Siblings, as the suite expects them: ../backend/target/glazelab-0.1.0.jar.
+      - uses: actions/checkout@v4
+        with:
+          path: frontend
+      - uses: actions/checkout@v4
+        with:
+          repository: glazelab-eu/backend
+          path: backend
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Package the API
+        working-directory: backend
+        run: mvn -B -ntp -DskipTests package
+      - name: Install the frontend and Chromium
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run the browser suite
+        working-directory: frontend
+        run: npm run e2e -- --project=${{ matrix.project }}
+      - name: Keep the report and the failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-${{ matrix.project }}
+          path: |
+            ${{ runner.temp }}/e2e-${{ matrix.project }}/report
+            ${{ runner.temp }}/e2e-${{ matrix.project }}/results
+            ${{ runner.temp }}/e2e-${{ matrix.project }}/backend/api.log
+          retention-days: 7

@@ -15,6 +15,10 @@ Requirements: Node 22 or later. Install the dependencies with `npm ci`.
 - Browser tests (Playwright): `npm run e2e` (all), `npm run e2e:smoke`, or `npm run e2e -- <spec file>`. They start the
   packaged API from a `backend/` checkout next to this repository (`mvn -DskipTests package` there) or from
   `GLAZELAB_E2E_JAR`, with the system Chromium (`CHROME_BINARY` overrides it) or Playwright's own.
+- Continuous integration: `.github/workflows/ci.yml` runs the production build (format, checks, Vitest, Vite), the REUSE licence
+  check and the browser suite (desktop and phone as two jobs) against the API of the `backend` repository's `main`, with the
+  stand-in for the photo model (`GLAZELAB_VISION_MODEL=stand-in`, so the `@vision-real` specs skip). A failed browser run keeps
+  its report as an artifact for a week.
 - API client: `openapi.json` and `src/lib/generated/` are generated from the API's OpenAPI document
   (`npm run api:generate` reads `openapi.json`); never edit them by hand.
 - Container: `Dockerfile` builds the app and serves it with Nginx (`nginx.conf.template`).
