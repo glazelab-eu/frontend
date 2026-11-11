@@ -78,6 +78,25 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps chromium
+      # The layout specs measure the system font (system-ui): the runner's default sans-serif is wider than Noto Sans, the font the
+      # suite was written against, and the longer German, Spanish, Italian and Portuguese labels then overflow.
+      - name: Use Noto Sans as the system font
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-core fonts-noto-color-emoji
+          mkdir -p ~/.config/fontconfig
+          cat > ~/.config/fontconfig/fonts.conf <<'XML'
+          <?xml version="1.0"?>
+          <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+          <fontconfig>
+            <alias binding="same"><family>sans-serif</family><prefer><family>Noto Sans</family></prefer></alias>
+            <alias binding="same"><family>system-ui</family><prefer><family>Noto Sans</family></prefer></alias>
+          </fontconfig>
+          XML
+          fc-cache -f
+          fc-match sans-serif
+          fc-match system-ui
+          fc-match sans-serif | grep -q 'Noto Sans'
       - name: Run the browser suite
         working-directory: frontend
         run: npm run e2e -- --project=${{ matrix.project }}
