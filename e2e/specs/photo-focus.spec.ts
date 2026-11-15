@@ -51,7 +51,7 @@ test('a photo uploaded with a focus keeps its whole size, and the card cover cen
   await shell.expectSignedIn(signedIn.displayName);
   await page
     .getByRole('main')
-    .getByRole('button', { name: t('images.addTestTile') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
   const upload = page.getByRole('dialog', { name: t('upload.heading', { title }) });
@@ -95,7 +95,7 @@ test('a photo without a focus stays centred, and a reset focus is sent as none',
   await shell.expectSignedIn(signedIn.displayName);
   await page
     .getByRole('main')
-    .getByRole('button', { name: t('images.addTestTile') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
   const upload = page.getByRole('dialog', { name: t('upload.heading', { title }) });

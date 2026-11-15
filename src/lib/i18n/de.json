@@ -223,8 +223,6 @@
   "images.morePhotos": "Weitere Fotos",
   "images.noPhoto": "Noch kein Foto",
   "images.addTestTile": "Foto der Testfliese hinzufügen",
-  "images.addFinished": "Fertiges Werkstück hinzufügen",
-  "images.addFinishedFor": "Fertiges Werkstück hinzufügen für {title}",
   "images.unavailableOffline": "Bild offline nicht verfügbar",
   "images.usedIn": "Verwendet in {title}",
   "language.label": "Sprache",

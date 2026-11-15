@@ -223,8 +223,6 @@
   "images.morePhotos": "More photos",
   "images.noPhoto": "No photo yet",
   "images.addTestTile": "Add test tile photo",
-  "images.addFinished": "Add finished piece",
-  "images.addFinishedFor": "Add finished piece for {title}",
   "images.unavailableOffline": "Image unavailable offline",
   "images.usedIn": "Used in {title}",
   "language.label": "Language",

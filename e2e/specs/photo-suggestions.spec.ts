@@ -9,6 +9,7 @@ import { BISQUE_STEP, type Api } from '../support/api';
 import { t } from '../support/i18n';
 import { png } from '../support/images';
 import { AppShell } from '../support/pages/app-shell';
+import { attachFinished } from '../support/pages/upload';
 import { DIST } from '../support/paths';
 import { expect, test } from '../support/test';
 import { downloadMegabytes, routeStandIn, STAND_IN_BUILD, STAND_IN_BUILD_REASON, VISION_URL } from '../support/vision';
@@ -42,7 +43,7 @@ async function openFinishedUpload(page: Page, shell: AppShell, api: Api, name: s
   await shell.expectSignedIn(name);
   await page
     .getByRole('main')
-    .getByRole('button', { name: t('images.addFinished') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
   const dialog = page.getByRole('dialog', { name: t('upload.heading', { title }) });
@@ -69,7 +70,7 @@ test('nothing is downloaded before the person says yes, and "Not now" leaves no 
   const { dialog } = await openFinishedUpload(page, shell, api, signedIn.displayName, `Ask ${uid}`);
 
   // Choosing a finished-piece photo asks first, in plain words; nothing has been requested, and nothing stored.
-  await dialog.getByLabel(t('upload.library')).setInputFiles(RED);
+  await attachFinished(dialog, RED);
   await expect(consent(page)).toBeVisible();
   await expect(consent(page).getByText(t('vision.consent.body'))).toBeVisible();
   await expect(consent(page).getByText(t('vision.consent.size', { size: downloadMegabytes() }), { exact: false })).toBeVisible();
@@ -88,7 +89,7 @@ test('nothing is downloaded before the person says yes, and "Not now" leaves no 
   await expect(dialog.getByText(t('vision.suggested.title'))).toHaveCount(0);
   await expect(dialog.getByText(t('vision.status.analysing'))).toHaveCount(0);
   await expect(dialog.getByText('red.png')).toBeVisible();
-  await dialog.getByLabel(t('upload.library')).setInputFiles(BLUE);
+  await attachFinished(dialog, BLUE);
   await expect(dialog.getByText('blue.png')).toBeVisible();
   await expect(consent(page)).toHaveCount(0);
   expect(requested).toEqual([]);
@@ -99,10 +100,10 @@ test('nothing is downloaded before the person says yes, and "Not now" leaves no 
   await shell.expectSignedIn(signedIn.displayName);
   await page
     .getByRole('main')
-    .getByRole('button', { name: t('images.addFinished') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
-  await page.getByRole('dialog').getByLabel(t('upload.library')).setInputFiles(RED);
+  await attachFinished(page.getByRole('dialog'), RED);
   await expect(page.getByRole('dialog').getByText('red.png')).toBeVisible();
   await expect(consent(page)).toHaveCount(0);
   expect(requested).toEqual([]);
@@ -123,7 +124,7 @@ test('turning it on downloads once, suggests a tag for a finished-piece photo an
   const tags = async () =>
     ((await (await page.request.get('/api/combinations')).json()) as { id: string; tags: string[] }[]).find((item) => item.id === id)?.tags;
 
-  await dialog.getByLabel(t('upload.library')).setInputFiles(RED);
+  await attachFinished(dialog, RED);
   await consent(page)
     .getByRole('button', { name: t('vision.consent.on') })
     .click();
@@ -143,7 +144,7 @@ test('turning it on downloads once, suggests a tag for a finished-piece photo an
   expect(await tags()).toEqual(['mug']);
 
   // A second photo of a blue piece suggests a vase; dismissing hides every suggestion.
-  await dialog.getByLabel(t('upload.library')).setInputFiles(BLUE);
+  await attachFinished(dialog, BLUE);
   await expect(chip(page, 'vase')).toBeVisible();
   await dialog.getByRole('button', { name: t('vision.suggested.dismiss') }).click();
   await expect(chip(page, 'vase')).toHaveCount(0);
@@ -167,7 +168,7 @@ test('the worker stops after a minute without a request and the next photo start
   await page.clock.install();
   const requested = watchModelRequests(page);
   const { dialog } = await openFinishedUpload(page, shell, api, signedIn.displayName, `Sleep ${uid}`);
-  await dialog.getByLabel(t('upload.library')).setInputFiles(RED);
+  await attachFinished(dialog, RED);
   await consent(page)
     .getByRole('button', { name: t('vision.consent.on') })
     .click();
@@ -180,7 +181,7 @@ test('the worker stops after a minute without a request and the next photo start
   expect((await cacheKeys(page)).sort()).toEqual(['labels.json', 'model.onnx', 'ort-wasm-simd-threaded.wasm']);
 
   // The next photo works: a new worker reads the files from Cache Storage, no new request for them.
-  await dialog.getByLabel(t('upload.library')).setInputFiles(BLUE);
+  await attachFinished(dialog, BLUE);
   await expect(chip(page, 'vase')).toBeVisible();
   expect(page.workers()).toHaveLength(1);
   expect(requested.sort()).toEqual(['labels.json', 'model.onnx', 'ort-wasm-simd-threaded.wasm']);
@@ -192,13 +193,13 @@ test('a photo with nothing known in it, and photos of other kinds, get no sugges
   const { dialog } = await openFinishedUpload(page, shell, api, signedIn.displayName, `Kinds ${uid}`);
 
   // White is closest to a label that is never suggested: analysed, and no chip, no empty box.
-  await dialog.getByLabel(t('upload.library')).setInputFiles(WHITE);
+  await attachFinished(dialog, WHITE);
   await expect(dialog.getByText(t('vision.status.analysing'))).toHaveCount(0, { timeout: 20_000 });
   await expect(dialog.getByRole('heading', { level: 3, name: t('vision.suggested.title') })).toHaveCount(0);
   await expect(chip(page, 'mug')).toHaveCount(0);
 
   // A red photo of another kind (a test tile) is never analysed; set back to a finished piece it is.
-  await dialog.getByLabel(t('upload.library')).setInputFiles(RED);
+  await attachFinished(dialog, RED);
   await expect(chip(page, 'mug')).toBeVisible();
   await dialog
     .getByLabel(t('upload.kind'))
@@ -221,7 +222,7 @@ test('the test tile photo of a combination is never analysed or asked about', as
   await shell.expectSignedIn(signedIn.displayName);
   await page
     .getByRole('main')
-    .getByRole('button', { name: t('images.addTestTile') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
   const dialog = page.getByRole('dialog', { name: t('upload.heading', { title }) });
@@ -267,7 +268,7 @@ test('a download that fails leaves a plain message, nothing broken, and works wh
   const control: { fail?: 'error' | 'offline' } = { fail: 'error' };
   await standIn(page, control);
   const { dialog } = await openFinishedUpload(page, shell, api, signedIn.displayName, `Fail ${uid}`);
-  await dialog.getByLabel(t('upload.library')).setInputFiles(RED);
+  await attachFinished(dialog, RED);
   await consent(page)
     .getByRole('button', { name: t('vision.consent.on') })
     .click();
@@ -298,7 +299,7 @@ test('offline, before the first online use, the question is not shown; it appear
   const requested = watchModelRequests(page);
   const { dialog } = await openFinishedUpload(page, shell, api, signedIn.displayName, `Offline ${uid}`);
   await context.setOffline(true);
-  await dialog.getByLabel(t('upload.library')).setInputFiles(RED);
+  await attachFinished(dialog, RED);
   await expect(dialog.getByText('red.png')).toBeVisible();
   await expect(consent(page)).toHaveCount(0);
   expect(requested).toEqual([]);
@@ -311,7 +312,7 @@ test('on a connection that looks metered the question says so, and a stored yes 
   await page.addInitScript(() => Object.defineProperty(navigator, 'connection', { value: { saveData: true, type: 'cellular' } }));
   const requested = watchModelRequests(page);
   const { dialog } = await openFinishedUpload(page, shell, api, signedIn.displayName, `Metered ${uid}`);
-  await dialog.getByLabel(t('upload.library')).setInputFiles(RED);
+  await attachFinished(dialog, RED);
   await expect(consent(page).getByText(t('vision.consent.metered'))).toBeVisible();
   await consent(page)
     .getByRole('button', { name: t('vision.consent.later') })
@@ -323,11 +324,11 @@ test('on a connection that looks metered the question says so, and a stored yes 
   await shell.expectSignedIn(signedIn.displayName);
   await page
     .getByRole('main')
-    .getByRole('button', { name: t('images.addFinished') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
   const again = page.getByRole('dialog');
-  await again.getByLabel(t('upload.library')).setInputFiles(RED);
+  await attachFinished(again, RED);
   await expect(again.getByText(t('vision.confirm.body', { size: downloadMegabytes() }))).toBeVisible();
   expect(requested).toEqual([]);
   await again.getByRole('button', { name: t('vision.confirm.download') }).click();
@@ -355,9 +356,9 @@ test('the question and the setting speak German, Portuguese, Italian and Spanish
     const id = await api.addCombination({ title: `Locale ${locale} ${uid}`, steps: [BISQUE_STEP] });
     await page.goto('about:blank');
     await page.goto(`/#/combinations/${id}`);
-    await page.getByRole('main').getByRole('button', { name: messages['images.addFinished'] }).first().click();
+    await page.getByRole('main').getByRole('button', { name: messages['catalog.addPhoto'] }).first().click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel(messages['upload.library']).setInputFiles(RED);
+    await attachFinished(dialog, RED, { library: messages['upload.library'], kind: messages['upload.kind'], finished: messages['images.kind.finished'] });
     const question = page.getByRole('region', { name: messages['vision.consent.title'] });
     await expect(question).toBeVisible();
     await expect(question.getByText(messages['vision.consent.body'])).toBeVisible();
@@ -391,9 +392,9 @@ test('the chip offers the word of the writer\'s language: "jarrón" in Spanish, 
     const id = await api.addCombination({ title: `Chip ${locale} ${uid}`, steps: [BISQUE_STEP] });
     await page.goto('about:blank');
     await page.goto(`/#/combinations/${id}`);
-    await page.getByRole('main').getByRole('button', { name: messages['images.addFinished'] }).first().click();
+    await page.getByRole('main').getByRole('button', { name: messages['catalog.addPhoto'] }).first().click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel(messages['upload.library']).setInputFiles(BLUE);
+    await attachFinished(dialog, BLUE, { library: messages['upload.library'], kind: messages['upload.kind'], finished: messages['images.kind.finished'] });
     const question = page.getByRole('region', { name: messages['vision.consent.title'] });
     // The first round turns it on; the second finds the stored yes and asks nothing.
     if (locale === 'es') await question.getByRole('button', { name: messages['vision.consent.on'] }).click();
@@ -408,7 +409,7 @@ test('with the real model a photo of a mug suggests "mug" @vision-real', async (
   // A public-domain photo (CC0, Commons "Entenbecher.jpg" by Tetzemann, scaled to 480 px): a blue ceramic mug with a duck.
   const photo = { name: 'mug.jpg', mimeType: 'image/jpeg', buffer: readFileSync(new URL('../fixtures/mug-photo.jpg', import.meta.url)) };
   const { dialog } = await openFinishedUpload(page, shell, api, signedIn.displayName, `Real ${uid}`);
-  await dialog.getByLabel(t('upload.library')).setInputFiles(photo);
+  await attachFinished(dialog, photo);
   await consent(page)
     .getByRole('button', { name: t('vision.consent.on') })
     .click();
@@ -442,7 +443,7 @@ worker.describe('with the service worker', () => {
         await shell.expectSignedIn(signedIn.displayName);
         await page
           .getByRole('main')
-          .getByRole('button', { name: t('images.addFinished') })
+          .getByRole('button', { name: t('catalog.addPhoto') })
           .first()
           .click();
         return page.getByRole('dialog', { name: t('upload.heading', { title }) });
@@ -458,7 +459,7 @@ worker.describe('with the service worker', () => {
       expect(precached.length).toBeGreaterThan(5);
       expect(precached.filter((url) => /vision|onnx|ort-wasm/.test(url))).toEqual([]);
 
-      await dialog.getByLabel(t('upload.library')).setInputFiles(RED);
+      await attachFinished(dialog, RED);
       await consent(page)
         .getByRole('button', { name: t('vision.consent.on') })
         .click();
@@ -473,12 +474,12 @@ worker.describe('with the service worker', () => {
       await shell.expectSignedIn(signedIn.displayName);
       await page
         .getByRole('main')
-        .getByRole('button', { name: t('images.addFinished') })
+        .getByRole('button', { name: t('catalog.addPhoto') })
         .first()
         .click();
       dialog = page.getByRole('dialog', { name: t('upload.heading', { title }) });
       await context.setOffline(true);
-      await dialog.getByLabel(t('upload.library')).setInputFiles(RED);
+      await attachFinished(dialog, RED);
       await expect(chip(page, 'mug')).toBeVisible();
       await expect(chip(page, 'mug')).toBeDisabled();
       await expect(dialog.getByText(t('vision.suggested.offline'))).toBeVisible();

@@ -3,8 +3,7 @@ import spec from '../../../openapi.json';
 import { REPORT_KINDS } from '../admin/error-reports';
 import { FEEDBACK_FILTERS } from '../admin/feedback';
 import type { FeedbackDevice } from '../feedback/feedback';
-import type { FeedbackView, ImageView } from '../generated/types.gen';
-import type { UploadTarget } from './models';
+import type { FeedbackView } from '../generated/types.gen';
 import { IMAGE_KINDS } from '../images/pictures';
 import { LOOK_KINDS } from '../vision/library';
 import { WISHLIST_TYPES, type WishlistType } from '../clubs/wishlist';
@@ -38,6 +37,5 @@ describe('hand-written enum lists mirror the API', () => {
   it('hand-written unions are the generated ones (checked by the type check)', () => {
     expectTypeOf<WishlistType>().toEqualTypeOf<WishlistEntryView['type']>();
     expectTypeOf<FeedbackDevice>().toEqualTypeOf<NonNullable<FeedbackView['device']>>();
-    expectTypeOf<NonNullable<UploadTarget['kind']>>().toEqualTypeOf<ImageView['kind']>();
   });
 });

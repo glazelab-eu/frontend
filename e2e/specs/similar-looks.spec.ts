@@ -269,7 +269,7 @@ test('a fresh photo can be compared with the library before it is saved, and not
   await shell.open(`#/combinations/${library.combination.z}`);
   await page
     .getByRole('main')
-    .getByRole('button', { name: t('images.addTestTile') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
   const dialog = page.getByRole('dialog');
@@ -296,7 +296,7 @@ test('"Find similar" before the indexing asks about it first, and "Later" there 
   await expect(page.getByRole('main').getByRole('heading', { level: 1, name: library.title.z })).toBeVisible();
   await page
     .getByRole('main')
-    .getByRole('button', { name: t('images.addTestTile') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
   const dialog = page.getByRole('dialog');

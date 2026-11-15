@@ -5,9 +5,9 @@ import type { Focus } from '../../lib/images/photo-focus';
 import {
   addFiles,
   MAX_UPLOAD_BYTES,
+  START_KIND,
   allDone,
   converted,
-  defaultKind,
   editItem,
   emptyQueue,
   focused,
@@ -164,9 +164,9 @@ export function createUploadSession({
       return rejected;
     },
     previewOf: (key: number): string | undefined => previews[key],
-    /** Adds chosen files with the target's default kind; the others are named in `rejected` until the next choice. */
+    /** Adds chosen files at `START_KIND`; the others are named in `rejected` until the next choice. */
     add(files: File[]) {
-      const added = addFiles(queue, files, defaultKind(target));
+      const added = addFiles(queue, files, START_KIND);
       const first = queue.nextKey;
       queue = added.queue;
       rejected = added.rejected;

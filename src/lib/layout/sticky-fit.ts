@@ -3,7 +3,7 @@ import { headerHeight } from './headroom';
 /**
  * Whether a column of `height` px may stick to the top of a `viewport` px window: only when all of it fits with a gap of `gap` px
  * above and below, below a sticky header of `header` px (counted even where the header slides away, so the column does not flip between
- * sticking and not as the header comes and goes), else its lower part (the photo buttons) would stay out of reach until the page ends.
+ * sticking and not as the header comes and goes), else its lower part (the photo button) would stay out of reach until the page ends.
  * Unmeasured is false.
  */
 export function fitsSticky(height: number, viewport: number, gap: number, header = 0): boolean {

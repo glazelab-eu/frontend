@@ -223,8 +223,6 @@
   "images.morePhotos": "Más fotos",
   "images.noPhoto": "Todavía sin foto",
   "images.addTestTile": "Añadir foto de probeta",
-  "images.addFinished": "Añadir pieza terminada",
-  "images.addFinishedFor": "Añadir pieza terminada para {title}",
   "images.unavailableOffline": "Imagen no disponible sin conexión",
   "images.usedIn": "Usada en {title}",
   "language.label": "Idioma",

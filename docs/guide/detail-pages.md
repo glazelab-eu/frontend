@@ -19,10 +19,10 @@ Layout shared by both pages:
 Combination page (`pages/catalog/CombinationPage`):
 
 - Recipe order: author, title, firing, description, the action group, tags, shelf line, steps, lineage, then Delete below a rule. On phones the title is displayed before the author metadata. Star and Share stay beside the title.
-- The action group (`combination-card__actions`) holds the photo buttons (`CombinationCard`'s `photoActions` snippet) and the page's variation (signed in) and edit (author) actions on every width; the gallery keeps only photo browsing, metadata and its menu.
-- Photo buttons (test tile, finished piece) stay adjacent (a paired row on phones), for every signed-in viewer (a draft's only viewer is its author), disabled offline. The first photo swaps the placeholder for the gallery, so they open the upload with a `returnFocus` that finds the same button (`data-photo-add`) in its new place.
-- At most one green primary on the page: the test tile button only while a published combination has no photo (also for non-authors), Publish on a draft; everything else is an outlined `.button`.
-  - A draft shows its photo buttons, Publish and Edit draft, nothing else.
+- The action group (`combination-card__actions`) holds the photo button (`CombinationCard`'s `photoAction` snippet) and the page's variation (signed in) and edit (author) actions on every width; the gallery keeps only photo browsing, metadata and its menu.
+- ONE photo button (`catalog.addPhoto`, like the glaze page; a row of its own on phones), for every signed-in viewer (a draft's only viewer is its author), disabled offline. It opens the upload at Test tile; what each photo shows (test tile, finished piece, work in progress) is chosen there, never by a button per kind. The first photo swaps the placeholder for the gallery, so it opens the upload with a `returnFocus` that finds the same button (`data-photo-add`) in its new place.
+- At most one green primary on the page: the photo button only while a published combination has no photo (also for non-authors), Publish on a draft; everything else is an outlined `.button`.
+  - A draft shows its photo button, Publish and Edit draft, nothing else.
   - The title control ends the group on a published combination: Rename for the author, Correct title for a site admin on someone else's (`combinations/RenameCombinationDialog`, form `combination-title`, disabled offline). `app.retitleCombination` patches the title in place (`withCombinationTitle`) and saves the snapshot; 404 reloads with `notices.combinationGone`, 403 reloads.
   - Delete (author) is an outlined `.button` in danger ink, like the glaze page's admin removal.
 - The nav's Record is the only way to a new combination from the page (no "Record another").

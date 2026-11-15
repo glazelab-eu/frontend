@@ -137,7 +137,7 @@
   let byAuthor = $derived(user && combo.authorId && combo.author ? { id: combo.authorId, name: combo.author } : null);
   let authorAvatarId = $derived(byAuthor ? (authorAvatars?.[byAuthor.id] ?? null) : null);
   let title = $derived(combinationTitle(combo, $t('combination.untitled')));
-  /** List cards offer no photo actions on a draft (it is never waiting); the combination page (`detail`) has its own photo buttons. */
+  /** List cards offer no photo actions on a draft (it is never waiting); the combination page (`detail`) has its own photo button. */
   let photos = $derived(!!user && online && !combo.draft && !detail);
   /** The photo whose viewer is open (a list card; the detail page's gallery has its own). */
   let viewing = $state<string | null>(null);
@@ -224,47 +224,34 @@
   /** The placeholder of an own combination without a photo offers the first test tile photo. */
   let waiting = $derived(photos && !pictures.cover && combo.own);
   /**
-   * The detail page's photo buttons, for every signed-in viewer (a draft's viewer is its author): in the recipe action group below the
+   * The detail page's photo button, for every signed-in viewer (a draft's viewer is its author): in the recipe action group below the
    * description. On a draft Publish is the page's one primary.
    */
-  let photoButtons = $derived(detail && !!user);
+  let photoButton = $derived(detail && !!user);
   let card = $state<HTMLElement>();
   /** The detail page's gallery follows the page only while all of it fits the window (measured: captions and labels vary). */
   let sticky = $state(false);
   const followPage = (node: HTMLElement) => watchStickyFit(node, (fits) => (sticky = fits));
-  /**
-   * Keep upload focus on the matching recipe action even if a listing refresh replaced its opener.
-   */
-  function addPagePhoto(kind: 'TEST_TILE' | 'FINISHED') {
+  /** The page's one photo button; the upload dialog asks what each photo shows. Focus returns to it even if a listing refresh replaced it. */
+  function addPagePhoto() {
     const returnFocus = () => {
-      const button = card?.querySelector<HTMLElement>(`[data-photo-add="${kind}"]`);
+      const button = card?.querySelector<HTMLElement>('[data-photo-add]');
       button?.focus();
       return !!button;
     };
-    onAddPhoto({ type: 'combination', id: combo.id, title, kind }, returnFocus);
+    onAddPhoto({ type: 'combination', id: combo.id, title }, returnFocus);
   }
 </script>
 
-{#snippet photoActions()}
-  <div class="combination-card__photo-actions">
-    <button
-      type="button"
-      class={['button', { 'button--primary': !pictures.cover && !combo.draft }]}
-      disabled={!online}
-      data-photo-add="TEST_TILE"
-      onclick={() => addPagePhoto('TEST_TILE')}>
-      {$t('images.addTestTile')}
-    </button>
-    <button
-      type="button"
-      class="button"
-      disabled={!online}
-      aria-label={$t('images.addFinishedFor', { values: { title } })}
-      data-photo-add="FINISHED"
-      onclick={() => addPagePhoto('FINISHED')}>
-      {$t('images.addFinished')}
-    </button>
-  </div>
+{#snippet photoAction()}
+  <button
+    type="button"
+    class={['button', 'combination-card__photo-button', { 'button--primary': !pictures.cover && !combo.draft }]}
+    disabled={!online}
+    data-photo-add
+    onclick={addPagePhoto}>
+    {$t('catalog.addPhoto')}
+  </button>
 {/snippet}
 
 <article
@@ -399,8 +386,8 @@
         class="button-row combination-card__actions"
         role="group"
         aria-label={$t('combination.actions')}>
-        {#if photoButtons}
-          {@render photoActions()}
+        {#if photoButton}
+          {@render photoAction()}
         {/if}
         {@render actions?.()}
       </div>
@@ -555,9 +542,6 @@
     margin: var(--space-4) 0;
     padding: var(--space-3) 0;
     border-block: 0.0625rem solid var(--border);
-  }
-  .combination-card__photo-actions {
-    display: contents;
   }
   .combination-card__meta {
     display: flex;
@@ -776,18 +760,12 @@
       order: -1;
       margin-bottom: var(--space-2);
     }
-    /* Whatever wraps onto a row of its own fills it (the page's buttons are slotted in, hence :global); the photo buttons below keep sharing theirs. */
+    /* Whatever wraps onto a row of its own fills it (the page's buttons are slotted in, hence :global). */
     .combination-card__actions :global(.button) {
       flex: 1 1 auto;
     }
-    .combination-card__photo-actions {
-      display: flex;
-      flex: 1 1 100%;
-      gap: var(--space-2);
-    }
-    .combination-card__photo-actions .button {
-      flex: 1 1 0;
-      padding-inline: var(--space-1-5);
+    .combination-card__actions .combination-card__photo-button {
+      flex-basis: 100%;
     }
   }
   @media (pointer: coarse) {

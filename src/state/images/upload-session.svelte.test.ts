@@ -8,7 +8,7 @@ const png = (name: string, size = 5, type = 'image/png') => new File([new Uint8A
 const tick = () => new Promise((resolve) => setTimeout(resolve));
 
 function setup(
-  target: { type: 'glaze' | 'combination'; kind?: 'TEST_TILE' | 'FINISHED' | 'PACKAGING' } = { type: 'combination' },
+  target: { type: 'glaze' | 'combination' } = { type: 'combination' },
   convert: (file: File) => Promise<HeicResult> = () => Promise.reject(new Error('no HEIC expected')),
 ) {
   let counter = 0;
@@ -153,16 +153,13 @@ describe('createUploadSession', () => {
     expect(s.sent).toHaveLength(2);
   });
 
-  it('starts every file with the target’s kind: Test tile, the opener’s kind, never Packaging on a combination', () => {
-    for (const [target, kind] of [
-      [{ type: 'combination' as const }, 'TEST_TILE'],
-      [{ type: 'combination' as const, kind: 'FINISHED' as const }, 'FINISHED'],
-      [{ type: 'combination' as const, kind: 'PACKAGING' as const }, 'TEST_TILE'],
-      [{ type: 'glaze' as const, kind: 'PACKAGING' as const }, 'PACKAGING'],
-    ] as const) {
-      const s = setup(target);
+  it('starts every file at Test tile on glazes and combinations alike; the writer sets what each one shows', () => {
+    for (const type of ['combination', 'glaze'] as const) {
+      const s = setup({ type });
       s.session.add([png('a.png')]);
-      expect(s.session.items[0].kind).toBe(kind);
+      expect(s.session.items[0].kind).toBe('TEST_TILE');
+      s.session.edit(s.session.items[0].key, { kind: 'FINISHED' });
+      expect(s.session.items[0].kind).toBe('FINISHED');
     }
   });
 

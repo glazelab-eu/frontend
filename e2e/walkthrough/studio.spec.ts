@@ -60,7 +60,7 @@ test('studio: record a combination with steps, coats, firing and a photo', async
   await expect(page.getByRole('heading', { level: 1, name: 'Sage over Oatmeal, thin' })).toBeVisible();
   await human.pause(2000);
   await human.tryStep('photo', async () => {
-    await human.tap(main.getByRole('button', { name: t('images.addTestTile') }).first());
+    await human.tap(main.getByRole('button', { name: t('catalog.addPhoto') }).first());
     const upload = page.getByRole('dialog', { name: t('upload.heading', { title: 'Sage over Oatmeal, thin' }) });
     await expect(upload).toBeVisible();
     await human.pause(1200);

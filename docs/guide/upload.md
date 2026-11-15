@@ -2,7 +2,7 @@
 
 `images/UploadDialog`, opened app-level by `app.openUpload(target)`.
 
-- `UploadTarget.kind` is the starting kind when the target allows it, else Test tile; Packaging only for a glaze, Work in progress only for a combination (`kindsFor` over `kindsOn`). Only the combination page's add-finished-piece button passes Finished piece.
+- Every new file starts at Test tile (`START_KIND`); the writer sets what each photo shows in its row, never the opener. Packaging only for a glaze, Work in progress only for a combination (`kindsFor` over `kindsOn`).
 - Each file has its own kind, caption and firing date; visibility, club and the size limit are the batch's. The camera input (`capture="environment"`) shows on phones only.
 - The dialog registers a leave guard while any photo is not yet stored (chosen, waiting, in flight or failed).
 - Revoke preview object URLs on removal, after the file went in and on unmount.

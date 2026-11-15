@@ -149,7 +149,7 @@ test('a new member signs up, adds a glaze, shelves it, publishes a combination w
   await pace.pause(1800);
 
   // A test-tile photo on the new combination (no photo yet: the one green button, in the placeholder above the title).
-  await pace.tap(main.getByRole('button', { name: t('images.addTestTile') }).first());
+  await pace.tap(main.getByRole('button', { name: t('catalog.addPhoto') }).first());
   const upload = page.getByRole('dialog', { name: t('upload.heading', { title: naming.title(title) }) });
   await expect(upload).toBeVisible();
   await pace.pause();

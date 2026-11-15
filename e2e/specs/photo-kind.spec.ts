@@ -110,7 +110,7 @@ test('a photo uploaded as work in progress says so, and a glaze never offers tha
   await shell.expectSignedIn(signedIn.displayName);
   await page
     .getByRole('main')
-    .getByRole('button', { name: t('images.addTestTile') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
   const upload = page.getByRole('dialog', { name: t('upload.heading', { title }) });

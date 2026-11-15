@@ -55,7 +55,7 @@ test('the outlined favourite is an icon button and its selected state survives r
   await expect(main.getByRole('button', { name: messagesFor('en')['favorites.remove'], exact: true })).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('photo additions and Record a variation share the recipe action group beneath the description', async ({ page, shell, api, signedIn, uid }) => {
+test('the photo addition and Record a variation share the recipe action group beneath the description', async ({ page, shell, api, signedIn, uid }) => {
   const id = await api.addCombination({
     title: `Actions ${uid}`,
     description: 'Description before actions.',
@@ -66,8 +66,7 @@ test('photo additions and Record a variation share the recipe action group benea
   const main = page.getByRole('main');
   const messages = messagesFor('en');
   const group = main.getByRole('group', { name: messages['combination.actions'], exact: true });
-  await expect(group.getByRole('button', { name: messages['images.addTestTile'], exact: true })).toBeVisible();
-  await expect(group.getByRole('button', { name: messages['images.addFinished'], exact: false })).toBeVisible();
+  await expect(group.getByRole('button', { name: messages['catalog.addPhoto'], exact: true })).toBeVisible();
   await expect(group.getByRole('link', { name: messages['combination.recordVariation'], exact: true })).toBeVisible();
   const [description, actions, tags] = [
     (await main.getByText('Description before actions.', { exact: true }).boundingBox())!,
