@@ -3,11 +3,11 @@ import {
   DEFAULT_UPLOAD_VISIBILITY,
   MAX_UPLOAD_BYTES,
   MAX_UPLOAD_FILES,
+  START_KIND,
   addFiles,
   allDone,
   canFocus,
   converted,
-  defaultKind,
   editItem,
   emptyQueue,
   fileSizeLabel,
@@ -50,11 +50,10 @@ describe('kinds and visibility', () => {
     expect(kindsFor({ type: 'combination' })).toEqual(['TEST_TILE', 'FINISHED', 'IN_PROGRESS']);
   });
 
-  it('starts with the opener’s kind when the target allows it, else Test tile', () => {
-    expect(defaultKind({ type: 'combination' })).toBe('TEST_TILE');
-    expect(defaultKind({ type: 'combination', kind: 'FINISHED' })).toBe('FINISHED');
-    expect(defaultKind({ type: 'glaze', kind: 'PACKAGING' })).toBe('PACKAGING');
-    expect(defaultKind({ type: 'combination', kind: 'PACKAGING' })).toBe('TEST_TILE');
+  it('starts every new file at Test tile, a kind both glazes and combinations offer', () => {
+    expect(START_KIND).toBe('TEST_TILE');
+    expect(kindsFor({ type: 'glaze' })).toContain(START_KIND);
+    expect(kindsFor({ type: 'combination' })).toContain(START_KIND);
   });
 
   it('starts at Everyone and, for a remembered Club without a club, at the narrower Only me', () => {

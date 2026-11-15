@@ -16,12 +16,16 @@ test('a member uploads a finished-piece photo with a caption @smoke', async ({ p
   await shell.expectSignedIn(signedIn.displayName);
   await page
     .getByRole('main')
-    .getByRole('button', { name: t('images.addTestTile') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
   const upload = page.getByRole('dialog', { name: t('upload.heading', { title }) });
   await upload.getByLabel(t('upload.library')).setInputFiles(png('bowl.png'));
-  await upload.getByLabel(t('upload.kind')).selectOption({ label: t('images.kind.finished') });
+  // The page has one photo button: the dialog asks what the photo shows, starting at Test tile.
+  const kind = upload.getByLabel(t('upload.kind'));
+  await expect(kind).toHaveValue('TEST_TILE');
+  expect(await kind.locator('option').allTextContents()).toEqual([t('images.kind.tile'), t('images.kind.finished'), t('images.kind.inProgress')]);
+  await kind.selectOption({ label: t('images.kind.finished') });
   await upload.getByLabel(t('images.details.caption')).fill('Bowl, inside');
   await upload.getByRole('button', { name: t('upload.submit', { count: 1 }) }).click();
   await expect(upload).toBeHidden();
@@ -83,44 +87,32 @@ test('cards load the small card copy and the gallery the full size', async ({ pa
   expect(await full).toBeGreaterThan(cardBytes * 4);
 });
 
-test('photo additions share the recipe action group and are green only while there is no photo', async ({ page, shell, api, signedIn, uid }) => {
+test('the one photo addition sits in the recipe action group and is green only while there is no photo', async ({ page, shell, api, signedIn, uid }) => {
   const title = `Buttons ${uid}`;
   const id = await api.addCombination({ title, steps: [BISQUE_STEP] });
   await shell.open(`#/combinations/${id}`);
   await shell.expectSignedIn(signedIn.displayName);
   const main = page.getByRole('main');
-  const tile = main.getByRole('button', { name: t('images.addTestTile') });
-  const finished = main.getByRole('button', { name: t('images.addFinishedFor', { title }) });
+  const group = main.getByRole('group', { name: t('combination.actions') });
+  const add = group.getByRole('button', { name: t('catalog.addPhoto'), exact: true });
   const heading = main.getByRole('heading', { level: 1, name: title });
   const fill = (button: Locator) => button.evaluate((element) => getComputedStyle(element).backgroundColor);
-  const grouped = async (button: Locator) => {
-    const group = main.getByRole('group', { name: t('combination.actions') });
-    await expect(
-      group.getByRole('button', { name: (await button.getAttribute('aria-label')) || (await button.innerText()).trim(), exact: true }),
-    ).toBeVisible();
-    expect((await button.boundingBox())!.y).toBeGreaterThan((await heading.boundingBox())!.y);
-  };
-  // No photo yet: the test tile button is the page's one primary button, and both stand next to the placeholder, away from the recipe.
+  const outlined = await fill(group.getByRole('link', { name: t('combination.edit'), exact: true }));
+  // No photo yet: the photo button is the page's one primary button, below the title; no button per kind.
   await expect(main.getByText(t('images.noPhoto'))).toBeVisible();
-  await expect(tile).toBeVisible();
-  await expect(finished).toBeVisible();
-  expect(await fill(tile)).not.toBe(await fill(finished));
-  await grouped(tile);
-  await grouped(finished);
-  // Adjacent (23-31): one row, or the second directly under the first where the width does not fit both.
-  const [first, second] = [(await tile.boundingBox())!, (await finished.boundingBox())!];
-  expect(Math.abs(first.y - second.y) < 2 || (second.y > first.y && second.y - (first.y + first.height) <= 16)).toBe(true);
+  await expect(add).toBeVisible();
+  await expect(main.getByRole('button', { name: t('catalog.addPhoto') })).toHaveCount(1);
+  expect(await fill(add)).not.toBe(outlined);
+  expect((await add.boundingBox())!.y).toBeGreaterThan((await heading.boundingBox())!.y);
 
-  // With a photo both are outlined secondary buttons under the gallery, still above the recipe.
+  // With a photo it is an outlined secondary button under the gallery, still in the group.
   await api.uploadToCombination(id, { file: photoPng('tile.png', 480, 360) });
   await page.reload();
   await expect(page.getByRole('img', { name: t('images.alt.tile', { title }) })).toBeVisible();
-  await expect(tile).toBeVisible();
-  expect(await fill(tile)).toBe(await fill(finished));
-  await grouped(tile);
-  await grouped(finished);
-  expect((await tile.boundingBox())!.y).toBeGreaterThan((await page.getByRole('img', { name: t('images.alt.tile', { title }) }).boundingBox())!.y);
-  await expect(main.getByRole('button', { name: t('images.addTestTile') })).toHaveCount(1);
+  await expect(add).toBeVisible();
+  expect(await fill(add)).toBe(outlined);
+  expect((await add.boundingBox())!.y).toBeGreaterThan((await page.getByRole('img', { name: t('images.alt.tile', { title }) }).boundingBox())!.y);
+  await expect(main.getByRole('button', { name: t('catalog.addPhoto') })).toHaveCount(1);
 });
 
 test('another member gets the same outlined photo buttons and a guest none', async ({ page, shell, newApi, signedIn, uid }) => {
@@ -130,16 +122,15 @@ test('another member gets the same outlined photo buttons and a guest none', asy
   const id = await author.addCombination({ title, steps: [BISQUE_STEP] });
   await author.uploadToCombination(id, { file: photoPng('shared.png', 480, 360) });
   const main = page.getByRole('main');
-  const tile = main.getByRole('button', { name: t('images.addTestTile') });
-  const finished = main.getByRole('button', { name: t('images.addFinishedFor', { title }) });
+  const add = main.getByRole('button', { name: t('catalog.addPhoto') });
+  const variation = main.getByRole('link', { name: t('combination.recordVariation') });
 
   await shell.open(`#/combinations/${id}`);
   await shell.expectSignedIn(signedIn.displayName);
   await expect(page.getByRole('img', { name: t('images.alt.tile', { title }) })).toBeVisible();
-  await expect(tile).toBeVisible();
-  await expect(finished).toBeVisible();
-  expect(await tile.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(
-    await finished.evaluate((element) => getComputedStyle(element).backgroundColor),
+  await expect(add).toBeVisible();
+  expect(await add.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(
+    await variation.evaluate((element) => getComputedStyle(element).backgroundColor),
   );
   // The author's Edit is the author's.
   await expect(main.getByRole('link', { name: t('combination.edit'), exact: true })).toHaveCount(0);
@@ -149,8 +140,7 @@ test('another member gets the same outlined photo buttons and a guest none', asy
   await shell.expectGuest();
   await shell.open(`#/combinations/${id}`);
   await expect(page.getByRole('img', { name: t('images.alt.tile', { title }) })).toBeVisible();
-  await expect(tile).toHaveCount(0);
-  await expect(finished).toHaveCount(0);
+  await expect(add).toHaveCount(0);
   await expect(main.getByRole('button', { name: t('share.action') })).toBeVisible();
   await expect(main.getByRole('link', { name: t('combination.recordVariation') })).toHaveCount(0);
 });
@@ -188,15 +178,16 @@ test('the first photo keeps the focus on its photo button, which moved under the
   await shell.open(`#/combinations/${id}`);
   await shell.expectSignedIn(signedIn.displayName);
   const main = page.getByRole('main');
-  const finished = main.getByRole('button', { name: t('images.addFinishedFor', { title }) });
-  await finished.click();
+  const add = main.getByRole('button', { name: t('catalog.addPhoto') });
+  await add.click();
   const upload = page.getByRole('dialog', { name: t('upload.heading', { title }) });
   await upload.getByLabel(t('upload.library')).setInputFiles(png('bowl.png'));
+  await upload.getByLabel(t('upload.kind')).selectOption({ label: t('images.kind.finished') });
   await upload.getByRole('button', { name: t('upload.submit', { count: 1 }) }).click();
   await expect(upload).toBeHidden();
   await expect(page.getByRole('img', { name: t('images.alt.finished', { title }) })).toBeVisible();
-  // The placeholder's buttons left with it; the same button under the gallery takes the focus, not the page.
-  await expect(finished).toBeFocused();
+  // The placeholder left; the same button under the gallery takes the focus, not the page.
+  await expect(add).toBeFocused();
 });
 
 /** The gallery of a combination page: its thumbnail buttons by position and kind, the stage's key group, the menu and the live region. */

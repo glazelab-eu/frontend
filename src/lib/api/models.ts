@@ -83,10 +83,9 @@ export interface Snapshot {
   favoriteCounts?: import('../generated/types.gen').FavoriteCountsView;
 }
 
-/** What a new picture belongs to; the title is only shown in the upload dialog, `kind` is the one it starts with. */
+/** What a new picture belongs to; the title is only shown in the upload dialog. */
 export interface UploadTarget {
   type: 'glaze' | 'combination';
   id: string;
   title: string;
-  kind?: 'TEST_TILE' | 'FINISHED' | 'PACKAGING' | 'IN_PROGRESS';
 }

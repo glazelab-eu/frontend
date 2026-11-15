@@ -13,6 +13,7 @@ import { AvatarSection } from '../support/pages/avatar';
 import { grantSiteAdmin } from '../support/site-admin';
 import { PasswordDialog } from '../support/pages/password';
 import { StudioPage } from '../support/pages/studio';
+import { attachFinished } from '../support/pages/upload';
 import { expect, newAccount, test as base } from '../support/test';
 import { seedSimilar } from '../support/similar';
 import { standInFiles, VISION_URL } from '../support/vision';
@@ -586,7 +587,7 @@ test.describe('signed in', () => {
   test('combination page of another member with photos and the outlined photo buttons', async ({ page, shell, library, signedIn }) => {
     await shell.open(`#/combinations/${celadon(library)}`);
     await shell.expectSignedIn(signedIn.displayName);
-    await expect(page.getByRole('main').getByRole('button', { name: t('images.addTestTile') })).toBeVisible();
+    await expect(page.getByRole('main').getByRole('button', { name: t('catalog.addPhoto') })).toBeVisible();
     await settled(page);
     await expectAccessible(page);
   });
@@ -1294,7 +1295,7 @@ test.describe('signed in', () => {
     await shell.expectSignedIn(signedIn.displayName);
     await page
       .getByRole('main')
-      .getByRole('button', { name: t('images.addTestTile') })
+      .getByRole('button', { name: t('catalog.addPhoto') })
       .first()
       .click();
     await expect(page.getByRole('dialog', { name: t('upload.heading', { title: `Upload ${uid}` }) })).toBeVisible();
@@ -1308,7 +1309,7 @@ test.describe('signed in', () => {
     await shell.expectSignedIn(signedIn.displayName);
     await page
       .getByRole('main')
-      .getByRole('button', { name: t('images.addTestTile') })
+      .getByRole('button', { name: t('catalog.addPhoto') })
       .first()
       .click();
     const upload = page.getByRole('dialog', { name: t('upload.heading', { title }) });
@@ -1341,11 +1342,11 @@ test.describe('signed in', () => {
     await shell.expectSignedIn(signedIn.displayName);
     await page
       .getByRole('main')
-      .getByRole('button', { name: t('images.addFinished') })
+      .getByRole('button', { name: t('catalog.addPhoto') })
       .first()
       .click();
     const upload = page.getByRole('dialog', { name: t('upload.heading', { title }) });
-    await upload.getByLabel(t('upload.library')).setInputFiles(png('red.png', [230, 10, 10], 96, 96));
+    await attachFinished(upload, png('red.png', [230, 10, 10], 96, 96));
     await expect(upload.getByRole('heading', { level: 3, name: t('vision.consent.title') })).toBeVisible();
     await expectAccessible(page, { include: [DIALOG] });
     await upload.getByRole('button', { name: t('vision.consent.on') }).click();
@@ -1406,7 +1407,7 @@ test.describe('signed in', () => {
     await shell.open(`#/combinations/${library.combination.z}`);
     await page
       .getByRole('main')
-      .getByRole('button', { name: t('images.addTestTile') })
+      .getByRole('button', { name: t('catalog.addPhoto') })
       .first()
       .click();
     const upload = page.getByRole('dialog');
@@ -1447,7 +1448,7 @@ test.describe('signed in', () => {
     await shell.expectSignedIn(signedIn.displayName);
     await page
       .getByRole('main')
-      .getByRole('button', { name: t('images.addTestTile') })
+      .getByRole('button', { name: t('catalog.addPhoto') })
       .first()
       .click();
     const upload = page.getByRole('dialog', { name: t('upload.heading', { title }) });

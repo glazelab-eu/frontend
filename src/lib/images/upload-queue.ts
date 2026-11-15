@@ -55,10 +55,8 @@ export function kindsFor(target: Pick<UploadTarget, 'type'>): UploadKind[] {
   return kindsOn(target.type === 'glaze');
 }
 
-/** The kind a new file starts with: the one the opener asked for when the target allows it, else Test tile. */
-export function defaultKind(target: Pick<UploadTarget, 'type'> & { kind?: UploadKind }): UploadKind {
-  return target.kind && kindsFor(target).includes(target.kind) ? target.kind : 'TEST_TILE';
-}
+/** The kind every new file starts with, on glazes and combinations alike; the writer picks what each photo shows. */
+export const START_KIND: UploadKind = 'TEST_TILE';
 
 /**
  * The visibility a dialog starts with: the session's last choice when `audience` offers it. Club without a club to

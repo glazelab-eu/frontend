@@ -59,7 +59,7 @@ test('the author gets one action row, and Delete at the end below the rest @smok
   await expect(main.getByRole('heading', { level: 2 })).toHaveText([t('tags.label'), t('combination.variations.title')]);
 });
 
-test('a draft offers its photo buttons, Publish as the one primary, Edit draft, and Delete at the end', async ({ page, shell, api, signedIn, uid }) => {
+test('a draft offers its photo button, Publish as the one primary, Edit draft, and Delete at the end', async ({ page, shell, api, signedIn, uid }) => {
   const id = await api.addCombination({ title: `Draft ${uid}`, steps: [BISQUE_STEP], draft: true });
   await shell.open(`#/combinations/${id}`);
   await shell.expectSignedIn(signedIn.displayName);
@@ -69,11 +69,10 @@ test('a draft offers its photo buttons, Publish as the one primary, Edit draft, 
   await expect(publish).toBeVisible();
   await expect(edit).toBeVisible();
   // Photos go onto the draft too; only Publish is green.
-  const tile = main.getByRole('button', { name: t('images.addTestTile'), exact: true });
-  await expect(tile).toBeVisible();
-  await expect(main.getByRole('button', { name: t('images.addFinishedFor', { title: `Draft ${uid}` }) })).toBeVisible();
-  const fill = (button: typeof tile) => button.evaluate((element) => getComputedStyle(element).backgroundColor);
-  expect(await fill(tile)).not.toBe(await fill(publish));
+  const add = main.getByRole('button', { name: t('catalog.addPhoto'), exact: true });
+  await expect(add).toBeVisible();
+  const fill = (button: typeof add) => button.evaluate((element) => getComputedStyle(element).backgroundColor);
+  expect(await fill(add)).not.toBe(await fill(publish));
   await expect(main.getByRole('link', { name: t('combination.recordVariation') })).toHaveCount(0);
   const remove = main.getByRole('button', { name: t('combination.delete.confirm') });
   expect((await at(remove)).y).toBeGreaterThan((await at(publish)).y);
@@ -127,10 +126,10 @@ test('from 45em the gallery and the recipe stand side by side, the gallery follo
   const heading = main.getByRole('heading', { level: 1, name: title });
   const gallery = main.getByRole('region', { name: t('images.gallery', { title }) });
   await expect(page.getByRole('img', { name: t('images.alt.tile', { title }) })).toBeVisible();
-  const [media, text, add] = [await at(gallery), await at(heading), await at(main.getByRole('button', { name: t('images.addTestTile') }))];
+  const [media, text, add] = [await at(gallery), await at(heading), await at(main.getByRole('button', { name: t('catalog.addPhoto') }))];
   const wide = page.viewportSize()!.width >= 720;
   if (wide) {
-    // Side by side: the gallery (with its photo buttons) on the left, the title in the right column, level with the photo's top.
+    // Side by side: the gallery on the left, the title in the right column, level with the photo's top.
     expect(media.x + media.width).toBeLessThanOrEqual(text.x);
     expect(text.y).toBeLessThan(media.y + 100);
     expect(add.x).toBeGreaterThanOrEqual(text.x);
@@ -148,7 +147,7 @@ test('from 45em the gallery and the recipe stand side by side, the gallery follo
       expect((await at(heading)).y).toBeLessThan(0);
     }
   } else {
-    // One column: the photo, then the photo buttons, then the title, in that order, all as wide as the card.
+    // One column: the photo, then the title, then the photo button, in that order, all as wide as the card.
     expect(text.y).toBeLessThan(add.y);
     expect(add.y).toBeGreaterThan(media.y);
     expect(Math.abs(media.x - text.x)).toBeLessThan(40);
@@ -176,17 +175,17 @@ test('the keyboard reaches the recipe, the action row and Delete in reading orde
     );
   }
   const at2 = (label: string) => stops.findIndex((stop) => stop.includes(label));
-  const [tile, edit, variation, share, editCombination, remove] = [
-    at2(t('images.addTestTile')),
+  const [add, edit, variation, share, editCombination, remove] = [
+    at2(t('catalog.addPhoto')),
     at2(t('tags.edit')),
     at2(t('combination.recordVariation')),
     at2(t('share.action')),
     at2(t('combination.edit')),
     at2(t('combination.delete.confirm')),
   ];
-  for (const stop of [tile, edit, variation, share, editCombination, remove]) expect(stop).toBeGreaterThanOrEqual(0);
-  // The photo buttons come first, then the tags, the action row (variation, Share, Edit) and Delete last.
-  expect(tile).toBeLessThan(edit);
+  for (const stop of [add, edit, variation, share, editCombination, remove]) expect(stop).toBeGreaterThanOrEqual(0);
+  // The photo button comes first, then the tags, the action row (variation, Share, Edit) and Delete last.
+  expect(add).toBeLessThan(edit);
   expect(variation).toBeLessThan(edit);
   expect(share).toBeLessThan(edit);
   expect(variation).toBeLessThan(editCombination);
@@ -200,6 +199,8 @@ test('on a phone every row of the action group is filled edge to edge, also a bu
   const main = page.getByRole('main');
   const group = main.getByRole('group', { name: t('combination.actions'), exact: true });
   await expect(group.getByRole('link', { name: t('combination.recordVariation') })).toBeVisible();
+  // A stretched link centres its text like a button, with a mouse too (`.button` in style.css).
+  for (const link of await group.getByRole('link').all()) await expect(link).toHaveCSS('text-align', 'center');
   const phone = page.viewportSize()!.width < 720;
   const frame = (await group.boundingBox())!;
   const boxes = await group.locator('.button').evaluateAll((buttons) =>
@@ -214,7 +215,7 @@ test('on a phone every row of the action group is filled edge to edge, also a bu
     rows.set(box.y, { left: Math.min(row.left, box.x), right: Math.max(row.right, box.right) });
   }
   if (!phone) return;
-  // The photo buttons share the first row and the variation (and Edit) the next; each row spans the same width.
+  // The photo button fills the first row and the variation (and Edit) the next; each row spans the same width.
   expect(rows.size).toBeGreaterThan(1);
   const [first, ...others] = [...rows.values()];
   for (const row of others) {
@@ -296,8 +297,6 @@ test('the gallery sticks only while all of it fits the window, so its gallery co
     // follows the page; where it does not, it scrolls away and comes back.
     const header = Math.round(await headerHeight(page));
     expect(sticks, `${viewport.width}x${viewport.height}: gallery ${height} px, header ${header} px`).toBe(height + 32 + header <= viewport.height);
-    await expect(
-      main.getByRole('group', { name: t('combination.actions') }).getByRole('button', { name: t('images.addFinishedFor', { title }) }),
-    ).toBeVisible();
+    await expect(main.getByRole('group', { name: t('combination.actions') }).getByRole('button', { name: t('catalog.addPhoto') })).toBeVisible();
   }
 });

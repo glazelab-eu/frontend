@@ -8,6 +8,7 @@ import { formatMessage } from '../support/i18n';
 import { photoPng, png } from '../support/images';
 import { dictionaries, type Locale, locales } from '../support/locales';
 import { MOCK_USER, mockApi } from '../support/mock-api';
+import { attachFinished } from '../support/pages/upload';
 import { grantSiteAdmin } from '../support/site-admin';
 import { expect, newAccount, test } from '../support/test';
 
@@ -238,11 +239,15 @@ for (const locale of ['it', 'es'] as const) {
       await expect(h1()).toBeVisible();
       await screens.check('combination');
       await main
-        .getByRole('button', { name: startingWith(locale, 'images.addFinished') })
+        .getByRole('button', { name: say(locale, 'catalog.addPhoto') })
         .first()
         .click();
       const upload = page.getByRole('dialog');
-      await upload.getByLabel(say(locale, 'upload.library')).setInputFiles(png('finished.png'));
+      await attachFinished(upload, png('finished.png'), {
+        library: say(locale, 'upload.library'),
+        kind: say(locale, 'upload.kind'),
+        finished: say(locale, 'images.kind.finished'),
+      });
       await expect(upload.getByRole('region', { name: say(locale, 'vision.consent.title') })).toBeVisible();
       await screens.check('upload-dialog');
       // The focus dialog over it (this small photo also shows the refusal text).

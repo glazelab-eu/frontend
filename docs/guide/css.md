@@ -22,7 +22,7 @@ Formatting and structure:
 Contrast and buttons:
 
 - Contrast is WCAG AA: text 4.5:1 on every background it sits on, a field's boundary (`--control-border`, also on filter-bar selects and inputs) 3:1. `lib/layout/contrast.test.ts` reads the tokens from `style.css`, so a new token pair or background is added there.
-- `.button` is the one look of `<a>` and `<button>`: no underline and a visible boundary (`--control-border`). Outlined is the default (there is no `button--secondary`); the solid `.button--primary`/`.button--danger` carry their fill as the border colour.
+- `.button` is the one look of `<a>` and `<button>`: no underline, centred text (also a link a row stretches, on any pointer) and a visible boundary (`--control-border`). Outlined is the default (there is no `button--secondary`); the solid `.button--primary`/`.button--danger` carry their fill as the border colour.
   - An outlined button never sits on a tint (the sage tint, `--blue` and `--warning-bg` give the boundary under 3:1): use `.button--primary` there, as the install banner's Details and the scanner's Reload do.
   - A component never sets `border-color: var(--border)` on a `.button` (`contrast.test.ts`).
 - The destructive confirm of a dialog (and the reports page's Delete photo) is `.button--danger` of `style.css`, never a per-component red rule; a page's opener for such a dialog stays an outlined `.button`.
@@ -40,7 +40,7 @@ Touch screens:
 Shared classes (global, in `style.css` beside `.button`; kept tiny on purpose):
 
 - `.button-row`: every row of `.button`s (dialog footer, page, card or admin-entry actions): flex, wrap, `--space-2`, `--touch-gap` on coarse pointers; `.button-row--end` for end alignment (dialog footers). A host that needs more puts its own BEM class beside it with only that (margins, a border, `align-items`, `center` or `space-between`, hiding it on wide screens), never `gap`, `flex-wrap` or end alignment (`lib/layout/button-rows.test.ts`).
-  - Not for rows that must not wrap or are not plain button rows: header/card icon rows (`*__header-actions`, `GlazeRow`), `ShelfControls`, `StepControls`, the scan sheet's grid, toast and banner rows (`UpdateNotice`, `InstallPrompt`), a field with buttons, the phone pair of photo buttons in `CombinationCard`.
+  - Not for rows that must not wrap or are not plain button rows: header/card icon rows (`*__header-actions`, `GlazeRow`), `ShelfControls`, `StepControls`, the scan sheet's grid, toast and banner rows (`UpdateNotice`, `InstallPrompt`), a field with buttons.
 - `.visually-hidden`: text only for screen readers (live regions, a label a compact control hides); never copy its declarations (`clip-path: inset(50%)` in a component fails the test).
 - There is no other layout utility (`.row`, `.stack`, `.muted`, `.hint`).
 - `.icon-button`: a button that shows only a glyph, with the glyph from `ui/Icon` (stroke paths on a 24 grid; a new glyph goes into its `paths`), never a typed character (×, +, −, ⋯, arrows) or an inline `<svg>` (`lib/layout/icon-buttons.test.ts`). It is a class, not a component, because every host keeps its own markup, refs, ARIA states (`aria-pressed` on the star is the selected look, `aria-disabled` the offline look) and scoped placement classes.

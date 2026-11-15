@@ -89,7 +89,7 @@ async function openUpload(
   await shell.expectSignedIn(name);
   await page
     .getByRole('main')
-    .getByRole('button', { name: t('images.addTestTile') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
   return page.getByRole('dialog', { name: t('upload.heading', { title }) });

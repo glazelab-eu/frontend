@@ -151,7 +151,7 @@ test('saves a draft with two photos that only its author sees until publishing s
   await expect(main.getByText(t('combination.draft.note'))).toBeVisible();
   const gallery = main.getByRole('region', { name: t('images.gallery', { title }) });
   await expect(gallery.getByRole('button', { name: t('images.thumbnail', { current: 2, total: 2, kind: t('images.kind.tile') }) })).toBeVisible();
-  await expect(main.getByRole('button', { name: t('images.addTestTile'), exact: true })).toBeEnabled();
+  await expect(main.getByRole('button', { name: t('catalog.addPhoto'), exact: true })).toBeEnabled();
   await page.screenshot({ path: info.outputPath('draft-page-photos.png'), fullPage: true });
   await expectAccessible(page);
 

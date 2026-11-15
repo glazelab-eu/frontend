@@ -163,6 +163,8 @@ p {
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
+  /* A link styled as a button (`<a class="button">`) centres its text like a `<button>` when a row stretches it. */
+  text-align: center;
 }
 .button--primary {
   background: var(--accent);

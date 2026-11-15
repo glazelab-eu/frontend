@@ -253,7 +253,7 @@ test('a member journey sets only the sign-in and the CSRF cookie, with their fla
   // After the sign-in no ordinary answer sends the login cookie again (23-70b).
   expect(written.setCookies.filter(({ header }) => header.startsWith(LOGIN + '='))).toEqual([]);
   await main
-    .getByRole('button', { name: t('images.addTestTile') })
+    .getByRole('button', { name: t('catalog.addPhoto') })
     .first()
     .click();
   const upload = page.getByRole('dialog', { name: t('upload.heading', { title }) });
