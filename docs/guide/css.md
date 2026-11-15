@@ -22,7 +22,7 @@ Formatting and structure:
 Contrast and buttons:
 
 - Contrast is WCAG AA: text 4.5:1 on every background it sits on, a field's boundary (`--control-border`, also on filter-bar selects and inputs) 3:1. `lib/layout/contrast.test.ts` reads the tokens from `style.css`, so a new token pair or background is added there.
-- `.button` is the one look of `<a>` and `<button>`: no underline and a visible boundary (`--control-border`). Outlined is the default (there is no `button--secondary`); the solid `.button--primary`/`.button--danger` carry their fill as the border colour.
+- `.button` is the one look of `<a>` and `<button>`: no underline, centred text (also a link a row stretches, on any pointer) and a visible boundary (`--control-border`). Outlined is the default (there is no `button--secondary`); the solid `.button--primary`/`.button--danger` carry their fill as the border colour.
   - An outlined button never sits on a tint (the sage tint, `--blue` and `--warning-bg` give the boundary under 3:1): use `.button--primary` there, as the install banner's Details and the scanner's Reload do.
   - A component never sets `border-color: var(--border)` on a `.button` (`contrast.test.ts`).
 - The destructive confirm of a dialog (and the reports page's Delete photo) is `.button--danger` of `style.css`, never a per-component red rule; a page's opener for such a dialog stays an outlined `.button`.

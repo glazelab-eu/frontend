@@ -199,6 +199,8 @@ test('on a phone every row of the action group is filled edge to edge, also a bu
   const main = page.getByRole('main');
   const group = main.getByRole('group', { name: t('combination.actions'), exact: true });
   await expect(group.getByRole('link', { name: t('combination.recordVariation') })).toBeVisible();
+  // A stretched link centres its text like a button, with a mouse too (`.button` in style.css).
+  for (const link of await group.getByRole('link').all()) await expect(link).toHaveCSS('text-align', 'center');
   const phone = page.viewportSize()!.width < 720;
   const frame = (await group.boundingBox())!;
   const boxes = await group.locator('.button').evaluateAll((buttons) =>
