@@ -17,7 +17,7 @@ const english = (): UploadLabels => ({ library: t('upload.library'), kind: t('up
  * and only finished pieces are analysed for photo suggestions. Files are images, so each adds one row.
  */
 export async function attachFinished(dialog: Locator, files: Files, labels: UploadLabels = english()) {
-  const kinds = dialog.getByLabel(labels.kind, { exact: true });
+  const kinds = dialog.getByLabel(labels.kind);
   const before = await kinds.count();
   const added = Array.isArray(files) ? files.length : 1;
   await dialog.getByLabel(labels.library).setInputFiles(files);
