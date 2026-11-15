@@ -817,6 +817,22 @@ test.describe('signed in', () => {
     await expectAccessible(page);
   });
 
+  test("Shelf showing a buddy's shelf", async ({ page, shell, api, newApi, library, signedIn, uid }) => {
+    await buddiesWith(api, newApi, uid, ['Ada'], glazeId(library));
+    await shell.open('#/stock');
+    await shell.expectSignedIn(signedIn.displayName);
+    await page
+      .getByRole('main')
+      .getByRole('group', { name: t('stock.shelves.buddies') })
+      .getByRole('link')
+      .first()
+      .click();
+    await expect(page.getByRole('main').getByRole('heading', { level: 2, name: t('stock.buddy.title', { name: 'Ada' }) })).toBeVisible();
+    await expect(page.getByRole('main').getByText('Celadon').first()).toBeVisible();
+    await settled(page);
+    await expectAccessible(page);
+  });
+
   test('Studio, new', async ({ page, shell, signedIn }) => {
     await shell.open('#/studio');
     await shell.expectSignedIn(signedIn.displayName);

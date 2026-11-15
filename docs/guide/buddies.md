@@ -13,6 +13,7 @@
   - The cards in I can make now compare against the selected owned sources, including an empty set for buddy-only access.
   - The `readIncludeClubs`/`readIncludeBuddies` flags are removed with account data at sign-out and deletion.
 - `buddies/AskBuddy`: `app.shareMessage(text)` shares `{text}` through the system sheet, else copies it, else shows it in a read-only field in a dialog; it works offline. A draft's message has no link.
+- The shelf page shows a buddy's shelf from the same availability (topic "Shelf", "Buddies' shelves"): glazes only, read only.
 - Keep private: `ShelfRow` shows the checkbox on personal rows only, never club rows (`app.setKeepPrivate`, `PATCH /api/stock/{id}`, patched in place, online only).
 - Waiting requests show in the activity bell ("Activity feed") and as one quiet line of text in the phone account menu (`buddies.requestCount`, a link to the account page): never a dot, badge or colour on the menu button. The line stays offline from the snapshot.
 

@@ -1638,5 +1638,11 @@
   "errors.wishlistItemFields": "Una entrada de artículo no lleva esmalte.",
   "errors.wishlistNameRequired": "Ponle un nombre al artículo.",
   "errors.wishlistLinkInvalid": "Escribe un enlace que empiece por http:// o https://, sin espacios ni datos de acceso, como máximo 2000 caracteres.",
-  "errors.wishlistLinkRequired": "Añade un enlace para el artículo."
+  "errors.wishlistLinkRequired": "Añade un enlace para el artículo.",
+  "stock.shelves.buddies": "Colegas",
+  "stock.scope.buddy": "Estante de un colega",
+  "stock.scope.buddyHint": "Solo qué esmaltes tiene, nunca cantidades. Solo esa persona lo cambia.",
+  "stock.buddy.title": "En el estante de {name}",
+  "stock.buddy.hint": "No aparecen los esmaltes que {name} mantiene privados.",
+  "stock.buddy.empty": "{name} no tiene esmaltes en su estante que puedas ver."
 }

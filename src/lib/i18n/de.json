@@ -1638,5 +1638,11 @@
   "errors.wishlistItemFields": "Ein Gegenstand-Eintrag hat keine Glasur.",
   "errors.wishlistNameRequired": "Gib dem Gegenstand einen Namen.",
   "errors.wishlistLinkInvalid": "Gib einen Link ein, der mit http:// oder https:// beginnt, ohne Leerzeichen oder Anmeldedaten, höchstens 2000 Zeichen.",
-  "errors.wishlistLinkRequired": "Füge einen Link zum Gegenstand hinzu."
+  "errors.wishlistLinkRequired": "Füge einen Link zum Gegenstand hinzu.",
+  "stock.shelves.buddies": "Buddys",
+  "stock.scope.buddy": "Regal eines Buddys",
+  "stock.scope.buddyHint": "Nur welche Glasuren dein Buddy hat, nie Mengen. Ändern kann es nur dein Buddy.",
+  "stock.buddy.title": "Im Regal von {name}",
+  "stock.buddy.hint": "Glasuren, die {name} privat hält, stehen hier nicht.",
+  "stock.buddy.empty": "Im Regal von {name} ist keine Glasur, die du sehen kannst."
 }

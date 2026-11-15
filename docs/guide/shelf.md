@@ -45,6 +45,14 @@ People must never change club stock by accident.
 - `.stock-shelves` is a flex parent (the chip row's sideways scrolling needs it); `.stock-list` keeps `min-width: 0` as a grid item.
 - The back link names the club when the club page is the recorded predecessor (`previousRoute`).
 
+## Buddies' shelves (`?shelf=<buddy's user ID>`)
+
+- With an accepted buddy, a second `ui/ChipRow` ("Buddies") stands under the own shelves' row: every buddy by name, the count is the glazes of `buddyShelves` (`lib/stock/buddy-shelf.ts`: availability of `buddyHolders`, only glazes of the loaded library). Without a club the first row is then a single Personal chip, so there is a way back.
+- One `?shelf=` parameter, so a buddy and an own shelf are never chosen together: `buddyShelfFor` resolves a buddy, and while one is shown no chip of the first row is current. A former buddy's or unknown ID shows all own shelves, as an unknown club does.
+- What shows is the terms' buddy rule and nothing more: which glazes, never amounts, jar sizes or kept-private entries (the API's availability; no extra endpoint). `ShelfScope` names the buddy (`stock.scope.buddy`); `buddies/BuddyShelfList` lists the glazes with links, one `AskBuddy` each (glaze message), the shelf filter from `SHELF_FILTER_FROM`, and offline the availability date.
+- Read only: the stock form and the phone scan actions are not shown (the page keeps their draft), so nothing typed there reads as a write to the buddy's shelf.
+- Behaviour: `buddy-shelf-view.spec.ts`; axe: `a11y.spec.ts` "Shelf showing a buddy's shelf".
+
 ## Additions vs. amounts (backend "Stock")
 
 - `app.saveStock` takes a `StockWrite` (`lib/api/inputs.ts`): a `StockInput` sets the amount (`POST /api/stock`, last write wins); a `StockAddInput` adds grams to what the server holds (`POST /api/stock/add`, `isAddition`), and the listing takes the answered entry (`withStockEntry`; an entry not listed yet reloads).

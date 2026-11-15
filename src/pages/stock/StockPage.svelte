@@ -33,6 +33,7 @@
     entryFor,
     filterByOwner,
     formOwnerFor,
+    isUsedUp,
     shelfChoices,
     shelfOwnerFor,
     stockDraftFor,
@@ -44,6 +45,8 @@
   } from '../../lib/stock/shelf';
   import BarcodeScanner from '../../components/scanning/BarcodeScanner.svelte';
   import ShelfScanSession from '../../components/stock/ShelfScanSession.svelte';
+  import BuddyShelfList from '../../components/buddies/BuddyShelfList.svelte';
+  import { availabilityDate, buddyHolders, buddyShelfFor, buddyShelves } from '../../lib/stock/buddy-shelf';
 
   interface Props {
     app: AppController;
@@ -51,7 +54,10 @@
     barcode?: string;
     /** A known glaze selected by a link from another add-glaze host. */
     glazeId?: string;
-    /** The owner from the route (`?shelf=`): "personal" or a club's ID; unknown clubs show all shelves. */
+    /**
+     * The shelf from the route (`?shelf=`): "personal", a club's ID or a buddy's user ID (read only); an unknown ID shows all
+     * shelves. One parameter, so a club and a buddy are never chosen at once.
+     */
     shelf?: string;
   }
 
@@ -77,10 +83,31 @@
   let shownStock = $derived(filterByOwner(stock, shelfOwner));
   let choices = $derived(shelfChoices(stock, clubs, $locale ?? undefined));
   let ownerClub = $derived(shelfOwner && shelfOwner !== 'personal' ? clubs.find((club) => club.id === shelfOwner) : undefined);
-  /** The header's shelf: without a club there is only the personal one. */
-  let scope = $derived<{ kind: 'personal' } | { kind: 'club'; name: string } | { kind: 'all' }>(
-    ownerClub ? { kind: 'club', name: ownerClub.name } : shelfOwner === 'personal' || !clubs.length ? { kind: 'personal' } : { kind: 'all' },
+  let glazesById = $derived(glazeMap(glazes));
+  /** The buddies' shelves (which glazes, never amounts), for the second chip row; empty for guests and accounts without buddies. */
+  let buddyChoices = $derived.by(() => {
+    const collator = new Intl.Collator($locale ?? 'en');
+    const holders = buddyHolders($appStore.buddyAvailability, $appStore.buddies, collator);
+    return buddyShelves(holders, $appStore.buddies, (id) => glazesById.has(id), collator);
+  });
+  /** The buddy whose shelf is shown instead of the account's own; a club or the personal shelf is never shown with it. */
+  let buddyShelf = $derived(buddyShelfFor(shelf, buddyChoices));
+  /** The account's own chips: without a club a single one for the personal shelf, so there is a way back from a buddy's. */
+  let ownChoices = $derived(
+    choices.length ? choices : buddyChoices.length ? [{ owner: undefined, clubName: null, count: stock.filter((item) => !isUsedUp(item)).length }] : [],
   );
+  /** The header's shelf: without a club there is only the personal one. */
+  let scope = $derived<{ kind: 'personal' } | { kind: 'club'; name: string } | { kind: 'buddy'; name: string } | { kind: 'all' }>(
+    buddyShelf
+      ? { kind: 'buddy', name: buddyShelf.buddy.displayName }
+      : ownerClub
+        ? { kind: 'club', name: ownerClub.name }
+        : shelfOwner === 'personal' || !clubs.length
+          ? { kind: 'personal' }
+          : { kind: 'all' },
+  );
+  let buddyGlazes = $derived(buddyShelf ? buddyShelf.glazeIds.flatMap((id) => glazesById.get(id) ?? []) : []);
+  let buddiesAsOf = $derived(online ? undefined : availabilityDate($appStore.buddyAvailability, $locale ?? 'en'));
   /** What an empty shown part of the shelf says: the chosen shelf's own sentence, as "your shelf is empty" would deny the others. */
   let emptyShelf = $derived(
     ownerClub
@@ -108,7 +135,6 @@
   }
   /** The message of a failed submit of one of this page's forms. */
   const formError = (form: FormName) => formErrorFor($appStore, form);
-  let glazesById = $derived(glazeMap(glazes));
   let stockForm = $state<HTMLElement>();
   let shelfList = $state.raw<ReturnType<typeof ShelfList>>();
   let showAllTimer: ReturnType<typeof setTimeout> | undefined;
@@ -277,22 +303,37 @@
 {#if user}
   <!-- Before the account's data arrives the clubs are unknown, so the header would name the wrong shelf. -->
   {#if shown}<ShelfScope {scope} />{/if}
-  {#if choices.length}
+  {#if ownChoices.length}
     <div class="stock-shelves">
       <ChipRow
         label={$t('stock.shelves.label')}
-        active={shelfOwner}>
-        {#each choices as choice (choice.owner ?? 'all')}
+        active={buddyShelf ? undefined : shelfOwner}>
+        {#each ownChoices as choice (choice.owner ?? 'all')}
           <FilterChip
-            label={choice.owner === undefined ? $t('stock.shelves.all') : (choice.clubName ?? $t('stock.owner.me'))}
+            label={choice.owner === undefined && clubs.length ? $t('stock.shelves.all') : (choice.clubName ?? $t('stock.owner.me'))}
             count={choice.count}
-            active={choice.owner === shelfOwner}
+            active={!buddyShelf && choice.owner === shelfOwner}
             href={chipHref(choice.owner)} />
         {/each}
       </ChipRow>
     </div>
   {/if}
-  <div class="button-row stock-entry-actions">
+  {#if buddyChoices.length}
+    <div class="stock-shelves">
+      <ChipRow
+        label={$t('stock.shelves.buddies')}
+        active={buddyShelf?.buddy.id}>
+        {#each buddyChoices as choice (choice.buddy.id)}
+          <FilterChip
+            label={choice.buddy.displayName}
+            count={choice.glazeIds.length}
+            active={choice.buddy.id === buddyShelf?.buddy.id}
+            href={chipHref(choice.buddy.id)} />
+        {/each}
+      </ChipRow>
+    </div>
+  {/if}
+  <div class={['button-row', 'stock-entry-actions', { 'stock-entry-actions--hidden': buddyShelf }]}>
     <button
       type="button"
       class="button button--primary"
@@ -317,6 +358,17 @@
   <RouteStatus
     status="loading"
     progress={progressOf($appStore.sync)} />
+{:else if buddyShelf}
+  <!-- A buddy's shelf is read only: no form, so nothing typed here can look like a write to it. -->
+  <section class="panel stock-list">
+    <PanelTitle title={$t('stock.buddy.title', { values: { name: buddyShelf.buddy.displayName } })} />
+    <BuddyShelfList
+      buddy={buddyShelf.buddy}
+      glazes={buddyGlazes}
+      userId={user.id}
+      asOf={buddiesAsOf}
+      onShare={app.shareMessage} />
+  </section>
 {:else}
   <div class="layout-columns">
     {#if stock.length}
@@ -542,6 +594,9 @@
       display: flex;
       width: 100%;
       margin-bottom: var(--space-4);
+    }
+    .stock-entry-actions--hidden {
+      display: none;
     }
     .stock-scan__button {
       display: none;

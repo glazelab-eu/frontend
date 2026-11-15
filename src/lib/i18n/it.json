@@ -1638,5 +1638,11 @@
   "errors.wishlistItemFields": "Una voce di oggetto non ha smalto.",
   "errors.wishlistNameRequired": "Dai un nome all'oggetto.",
   "errors.wishlistLinkInvalid": "Inserisci un link che inizi con http:// o https://, senza spazi né dati di accesso, fino a 2000 caratteri.",
-  "errors.wishlistLinkRequired": "Aggiungi un link per l'oggetto."
+  "errors.wishlistLinkRequired": "Aggiungi un link per l'oggetto.",
+  "stock.shelves.buddies": "Contatti",
+  "stock.scope.buddy": "Scaffale di un contatto",
+  "stock.scope.buddyHint": "Solo quali smalti ha, mai le quantità. Solo quella persona lo modifica.",
+  "stock.buddy.title": "Sullo scaffale di {name}",
+  "stock.buddy.hint": "Gli smalti che {name} tiene privati non compaiono.",
+  "stock.buddy.empty": "{name} non ha smalti sul suo scaffale che tu possa vedere."
 }
