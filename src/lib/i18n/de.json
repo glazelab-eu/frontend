@@ -1644,5 +1644,7 @@
   "stock.scope.buddyHint": "Nur welche Glasuren dein Buddy hat, nie Mengen. Ändern kann es nur dein Buddy.",
   "stock.buddy.title": "Im Regal von {name}",
   "stock.buddy.hint": "Glasuren, die {name} privat hält, stehen hier nicht.",
-  "stock.buddy.empty": "Im Regal von {name} ist keine Glasur, die du sehen kannst."
+  "stock.buddy.empty": "Im Regal von {name} ist keine Glasur, die du sehen kannst.",
+  "stock.buddy.draft": "Dein nicht gespeicherter Eintrag für {glaze} wartet noch in deinem eigenen Regal.",
+  "stock.buddy.draftBack": "Zurück zu deinem Eintrag"
 }

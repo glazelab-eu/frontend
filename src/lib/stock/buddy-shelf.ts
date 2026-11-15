@@ -126,7 +126,7 @@ export const askMessageKey = (
 /** One buddy's shelf as the availability tells it: which glazes they have, never amounts (the terms' buddy rule). */
 export interface BuddyShelf {
   buddy: BuddyName;
-  /** The glaze IDs, as many as `count` says. */
+  /** The glazes they have (the chip's count), in the availability's order. */
   glazeIds: string[];
 }
 
@@ -144,7 +144,11 @@ export function buddyShelves(
   const byBuddy = new Map<string, string[]>();
   for (const [glazeId, list] of holders) {
     if (!known(glazeId)) continue;
-    for (const buddy of list) byBuddy.set(buddy.id, [...(byBuddy.get(buddy.id) ?? []), glazeId]);
+    for (const buddy of list) {
+      const ids = byBuddy.get(buddy.id);
+      if (ids) ids.push(glazeId);
+      else byBuddy.set(buddy.id, [glazeId]);
+    }
   }
   const seen = new Set<string>();
   return buddies.buddies

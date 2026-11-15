@@ -1644,5 +1644,7 @@
   "stock.scope.buddyHint": "Solo qué esmaltes tiene, nunca cantidades. Solo esa persona lo cambia.",
   "stock.buddy.title": "En el estante de {name}",
   "stock.buddy.hint": "No aparecen los esmaltes que {name} mantiene privados.",
-  "stock.buddy.empty": "{name} no tiene esmaltes en su estante que puedas ver."
+  "stock.buddy.empty": "{name} no tiene esmaltes en su estante que puedas ver.",
+  "stock.buddy.draft": "Tu entrada sin guardar de {glaze} sigue esperando en tu propio estante.",
+  "stock.buddy.draftBack": "Volver a tu entrada"
 }

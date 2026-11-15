@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import type { Api } from '../support/api';
 import { t, withCount } from '../support/i18n';
 import { expect, newAccount, test } from '../support/test';
@@ -10,6 +10,12 @@ import { expect, newAccount, test } from '../support/test';
 const main = (page: Page) => page.getByRole('main');
 const ownChips = (page: Page) => main(page).getByRole('group', { name: t('stock.shelves.label') });
 const buddyChips = (page: Page) => main(page).getByRole('group', { name: t('stock.shelves.buddies') });
+/** No chip of the row is current. */
+async function noneCurrent(row: Locator) {
+  for (const chip of await row.getByRole('link').all()) await expect(chip).not.toHaveAttribute('aria-current');
+}
+const visibleText = (page: Page, text: string) => main(page).getByText(text).filter({ visible: true });
+const quantity = (page: Page) => main(page).getByRole('spinbutton', { name: t('stock.form.quantity') });
 
 async function seed(api: Api, newApi: () => Promise<Api>, uid: string) {
   const first = await api.addGlaze({ newManufacturer: { name: `Bs ${uid}`, shortId: uid.toUpperCase() }, code: 'M-1', name: 'Mine' });
@@ -26,7 +32,7 @@ async function seed(api: Api, newApi: () => Promise<Api>, uid: string) {
   await ada.addStock({ glazeId: shared, ownerType: 'personal', quantityG: 1234 });
   await ada.addStock({ glazeId: secret, ownerType: 'personal', quantityG: 100 });
   await ada.setKeepPrivate((await ada.stock()).find((entry) => entry.glazeId === secret)!.id, true);
-  return { ada, adaName: `Ada ${uid}`, club, label: (code: string, name: string) => `Bs ${uid} ${code} ${name}` };
+  return { ada, adaName: `Ada ${uid}`, mine: first.id, club, label: (code: string, name: string) => `Bs ${uid} ${code} ${name}` };
 }
 
 test('a buddy chip shows their shelf read only, without amounts or private glazes, and never with an own shelf', async ({
@@ -49,13 +55,15 @@ test('a buddy chip shows their shelf read only, without amounts or private glaze
     .click();
   await expect(page).toHaveURL(new RegExp(`#/stock\\?shelf=${(await ada.me()).id}$`));
   await expect(buddyChips(page).getByRole('link', { name: withCount(adaName) })).toHaveAttribute('aria-current', 'page');
-  await expect(ownChips(page).locator('[aria-current]')).toHaveCount(0);
+  await noneCurrent(ownChips(page));
   await expect(main(page).getByRole('heading', { level: 2, name: t('stock.buddy.title', { name: adaName }) })).toBeVisible();
   await expect(main(page).getByRole('link', { name: label('S-1', 'Shared') })).toBeVisible();
   await expect(main(page).getByRole('button', { name: t('buddies.shelf.askFor', { name: adaName, glaze: label('S-1', 'Shared') }) })).toBeVisible();
-  await expect(main(page).getByText('Secret')).toHaveCount(0);
-  await expect(main(page).getByText('Mine')).toHaveCount(0);
-  await expect(main(page).getByText(/1[,.]?234/)).toHaveCount(0);
+  // The own shelf stays mounted but hidden: only what is visible counts.
+  await expect(visibleText(page, 'Secret')).toHaveCount(0);
+  await expect(visibleText(page, 'Mine')).toHaveCount(0);
+  // The amount as the app writes it (en), never the bare digits, which the test's uid may hold.
+  await expect(visibleText(page, '1,234')).toHaveCount(0);
   // Read only: no form that could look like a write to the buddy's shelf.
   await expect(main(page).getByRole('button', { name: t('stock.target.add') })).toHaveCount(0);
   await expect(main(page).getByRole('heading', { level: 1 })).toHaveCount(1);
@@ -64,7 +72,7 @@ test('a buddy chip shows their shelf read only, without amounts or private glaze
     .getByRole('link', { name: withCount(club.name) })
     .click();
   await expect(page).toHaveURL(new RegExp(`#/stock\\?shelf=${club.id}$`));
-  await expect(buddyChips(page).locator('[aria-current]')).toHaveCount(0);
+  await noneCurrent(buddyChips(page));
   await expect(main(page).getByRole('link', { name: label('S-1', 'Shared') })).toHaveCount(0);
   await expect(main(page).getByRole('button', { name: t('stock.target.addClub', { club: club.name }) })).toBeVisible();
 });
@@ -78,4 +86,51 @@ test('a former buddy’s link shows all own shelves', async ({ page, shell, api,
   await expect(ownChips(page).getByRole('link', { name: withCount(t('stock.shelves.all')) })).toHaveAttribute('aria-current', 'page');
   await expect(buddyChips(page)).toHaveCount(0);
   await expect(main(page).getByRole('heading', { level: 3, name: t('stock.group.personal'), exact: true })).toBeVisible();
+});
+
+test('a draft of the own form waits behind a buddy chip, named there with a way back', async ({ page, shell, api, newApi, signedIn, uid }) => {
+  const { ada, adaName, mine, label } = await seed(api, newApi, uid);
+  await shell.open(`#/stock?glaze=${mine}`);
+  await shell.expectSignedIn(signedIn.displayName);
+  await quantity(page).fill('555');
+  await buddyChips(page)
+    .getByRole('link', { name: withCount(adaName) })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`shelf=${(await ada.me()).id}`));
+  await expect(main(page).getByText(t('stock.buddy.draft', { glaze: label('M-1', 'Mine') }))).toBeVisible();
+  await main(page)
+    .getByRole('link', { name: t('stock.buddy.draftBack') })
+    .click();
+  await expect(page).toHaveURL(/shelf=personal/);
+  await expect(quantity(page)).toHaveValue('555');
+});
+
+test("a link's glaze waits for the own shelf instead of filling the form behind a buddy's", async ({ page, shell, api, newApi, signedIn, uid }) => {
+  const { ada, adaName, mine } = await seed(api, newApi, uid);
+  await shell.open(`#/stock?glaze=${mine}&shelf=${(await ada.me()).id}`);
+  await shell.expectSignedIn(signedIn.displayName);
+  await expect(main(page).getByRole('heading', { level: 2, name: t('stock.buddy.title', { name: adaName }) })).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await ownChips(page)
+    .getByRole('link', { name: withCount(t('stock.shelves.all')) })
+    .click();
+  await expect(main(page).getByRole('button', { name: t('stock.target.update') })).toBeVisible();
+  await expect(quantity(page)).toHaveValue('400');
+});
+
+test('without a club, the Personal chip alone leads back from a buddy and is current on its own link', async ({ page, shell, api, newApi, signedIn, uid }) => {
+  const ada = await newApi();
+  await ada.signUp({ ...newAccount(uid, 'Ada'), displayName: `Ada ${uid}` });
+  await api.requestBuddyByLink(await ada.replaceBuddyLink());
+  await ada.acceptBuddy((await api.me()).id);
+  await shell.open(`#/stock?shelf=${(await ada.me()).id}`);
+  await shell.expectSignedIn(signedIn.displayName);
+  await expect(main(page).getByText(t('stock.buddy.empty', { name: `Ada ${uid}` }))).toBeVisible();
+  await expect(ownChips(page).getByRole('link')).toHaveText([withCount(t('stock.owner.me'))]);
+  await ownChips(page)
+    .getByRole('link', { name: withCount(t('stock.owner.me')) })
+    .click();
+  await expect(page).toHaveURL(/#\/stock\?shelf=personal$/);
+  await expect(ownChips(page).getByRole('link', { name: withCount(t('stock.owner.me')) })).toHaveAttribute('aria-current', 'page');
+  await noneCurrent(buddyChips(page));
 });

@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { coverPosition } from '../../lib/images/photo-focus';
   import { t, formatNumber } from '../../lib/i18n';
   import type { StockWrite } from '../../lib/api/inputs';
   import type { StockItem } from '../../lib/api/models';
-  import { pictureSrc, type Picture } from '../../lib/images/pictures';
+  import type { Picture } from '../../lib/images/pictures';
   import { isUsedUp } from '../../lib/stock/shelf';
-  import ImageView from '../images/ImageView.svelte';
+  import ShelfGlaze from './ShelfGlaze.svelte';
   import ShelfControls from './ShelfControls.svelte';
 
   interface Props {
@@ -44,41 +43,25 @@
 </script>
 
 <li
-  class={['shelf-row', { 'shelf-row--used-up': isUsedUp(item) }]}
+  class="shelf-row"
   data-stock-id={item.id}>
-  <div class="shelf-row__main">
-    {#if picture}
-      <ImageView
-        variant="thumbnail"
-        src={pictureSrc(picture.image)}
-        position={coverPosition(picture.image)}
-        {userId}
-        alt={$t('images.alt.tile', { values: { title } })} />
-    {:else}
-      <div
-        class="shelf-row__icon"
-        aria-hidden="true">
-        ◒
-      </div>
+  <ShelfGlaze
+    {title}
+    {href}
+    {picture}
+    {userId}
+    muted={isUsedUp(item)}>
+    {#if item.jarSizeG}
+      <small class="shelf-row__jar">
+        {$t('stock.row.jar', { values: { quantity: $formatNumber(item.jarSizeG) } })}
+      </small>
     {/if}
-    <div class="shelf-row__text">
-      <a
-        class="shelf-row__title"
-        {href}>
-        {title}
-      </a>
-      {#if item.jarSizeG}
-        <small class="shelf-row__jar">
-          {$t('stock.row.jar', { values: { quantity: $formatNumber(item.jarSizeG) } })}
-        </small>
-      {/if}
-      {#if adder}
-        <small class="shelf-row__added">
-          {'you' in adder ? $t('stock.row.addedByYou') : $t('stock.row.addedBy', { values: { name: adder.name } })}
-        </small>
-      {/if}
-    </div>
-  </div>
+    {#if adder}
+      <small class="shelf-row__added">
+        {'you' in adder ? $t('stock.row.addedByYou') : $t('stock.row.addedBy', { values: { name: adder.name } })}
+      </small>
+    {/if}
+  </ShelfGlaze>
   <ShelfControls
     {item}
     {title}
@@ -110,34 +93,6 @@
     border-top: 0.0625rem solid var(--border);
     padding: var(--space-3) 0;
   }
-  .shelf-row__main {
-    flex: 1 1 11rem;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--space-2-5);
-  }
-  .shelf-row__icon {
-    width: 3.3125rem;
-    height: 3.3125rem;
-    border-radius: var(--radius-sm);
-    flex: none;
-    background: var(--sage);
-    color: var(--accent);
-    display: grid;
-    place-items: center;
-    font-size: 1.1875rem;
-  }
-  .shelf-row__text {
-    min-width: 0;
-  }
-  .shelf-row__title {
-    display: block;
-    font-size: var(--font-sm);
-    font-weight: 700;
-    color: var(--ink);
-    overflow-wrap: anywhere;
-  }
   .shelf-row__jar,
   .shelf-row__added {
     display: block;
@@ -161,15 +116,7 @@
     gap: var(--space-2);
     font-size: var(--font-sm);
   }
-  .shelf-row--used-up .shelf-row__title {
-    color: var(--muted);
-  }
   @media (pointer: coarse) {
-    .shelf-row__title {
-      display: flex;
-      align-items: center;
-      min-height: var(--touch-target);
-    }
     .shelf-row__jar,
     .shelf-row__added {
       font-size: var(--font-body);

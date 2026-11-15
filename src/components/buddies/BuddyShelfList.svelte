@@ -1,12 +1,13 @@
 <script lang="ts">
+  import { flushSync, untrack } from 'svelte';
   import { t, locale } from '../../lib/i18n';
   import type { BuddyName, Glaze } from '../../lib/api/models';
-  import { filterGlazes, glazeTitle } from '../../lib/glazes/glazes';
-  import { coverPosition } from '../../lib/images/photo-focus';
-  import { glazeTestTile, pictureSrc } from '../../lib/images/pictures';
+  import { filterGlazes, glazeTitle, idleSlices } from '../../lib/glazes/glazes';
+  import { glazeTestTile } from '../../lib/images/pictures';
   import { routeHref } from '../../lib/routing/routes';
-  import { SHELF_FILTER_FROM } from '../../lib/stock/shelf';
-  import ImageView from '../images/ImageView.svelte';
+  import { SHELF_FILTER_FROM, SHELF_FIRST_ROWS } from '../../lib/stock/shelf';
+  import ShelfFilter from '../stock/ShelfFilter.svelte';
+  import ShelfGlaze from '../stock/ShelfGlaze.svelte';
   import AskBuddy from './AskBuddy.svelte';
 
   interface Props {
@@ -33,6 +34,19 @@
     const matching = new Set(filterGlazes(glazes, query).map((glaze) => glaze.id));
     return sorted.filter((row) => matching.has(row.glaze.id));
   });
+
+  /** As on the own shelf (`ShelfList`): the first rows at once, the others in idle slices, as hundreds at once are a long task on a phone. */
+  const ROW_SLICE_MS = 10;
+  let limit = $state(SHELF_FIRST_ROWS);
+  let rowCount = $derived(shown.length);
+  $effect.pre(() => {
+    const count = rowCount;
+    if (count <= untrack(() => limit)) return;
+    return idleSlices(() => {
+      flushSync(() => (limit += 2));
+      return limit >= count;
+    }, ROW_SLICE_MS);
+  });
 </script>
 
 <p class="buddy-shelf__hint">{$t('stock.buddy.hint', { values: { name: buddy.displayName } })}</p>
@@ -40,47 +54,24 @@
   <p class="buddy-shelf__hint">{$t('buddies.shelf.asOf', { values: { date: asOf } })}</p>
 {/if}
 {#if filterable}
-  <label class="form-field buddy-shelf__filter">
-    {$t('stock.list.filter')}
-    <input
-      class="form-field__control"
-      type="search"
-      placeholder={$t('stock.list.filterPlaceholder')}
-      bind:value={query} />
-  </label>
+  <ShelfFilter bind:value={query} />
 {/if}
 {#if shown.length}
   <ul class="buddy-shelf__list">
-    {#each shown as { glaze, title } (glaze.id)}
-      {@const picture = glazeTestTile(glaze)}
+    {#each shown.slice(0, limit) as { glaze, title } (glaze.id)}
       <li class="buddy-shelf__row">
-        {#if picture}
-          <ImageView
-            variant="thumbnail"
-            src={pictureSrc(picture.image)}
-            position={coverPosition(picture.image)}
-            {userId}
-            alt={$t('images.alt.tile', { values: { title } })} />
-        {:else}
-          <div
-            class="buddy-shelf__icon"
-            aria-hidden="true">
-            ◒
-          </div>
-        {/if}
-        <div class="buddy-shelf__text">
-          <a
-            class="buddy-shelf__title"
-            href={routeHref({ name: 'glaze', id: glaze.id })}>
-            {title}
-          </a>
+        <ShelfGlaze
+          {title}
+          href={routeHref({ name: 'glaze', id: glaze.id })}
+          picture={glazeTestTile(glaze)}
+          {userId}>
           <AskBuddy
             {buddy}
             glaze={title}
             title={null}
             link={null}
             {onShare} />
-        </div>
+        </ShelfGlaze>
       </li>
     {/each}
   </ul>
@@ -96,9 +87,6 @@
     color: var(--muted);
     font-size: var(--font-xs);
   }
-  .buddy-shelf__filter {
-    margin-bottom: var(--space-3);
-  }
   .buddy-shelf__list {
     margin: 0;
     padding: 0;
@@ -106,43 +94,12 @@
   }
   .buddy-shelf__row {
     display: flex;
-    align-items: center;
-    gap: var(--space-2-5);
     border-top: 0.0625rem solid var(--border);
     padding: var(--space-3) 0;
-  }
-  .buddy-shelf__icon {
-    width: 3.3125rem;
-    height: 3.3125rem;
-    border-radius: var(--radius-sm);
-    flex: none;
-    background: var(--sage);
-    color: var(--accent);
-    display: grid;
-    place-items: center;
-    font-size: 1.1875rem;
-  }
-  .buddy-shelf__text {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-0-5);
-  }
-  .buddy-shelf__title {
-    font-size: var(--font-sm);
-    font-weight: 700;
-    color: var(--ink);
-    overflow-wrap: anywhere;
   }
   @media (pointer: coarse) {
     .buddy-shelf__hint {
       font-size: var(--font-body);
-    }
-    .buddy-shelf__title {
-      display: flex;
-      align-items: center;
-      min-height: var(--touch-target);
     }
   }
 </style>

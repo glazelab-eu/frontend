@@ -87,6 +87,9 @@ export const MAX_JAR_G = 100_000;
  */
 export const DEFAULT_JAR_G = 250;
 
+/** The shelf the page shows, as its header (`stock/ShelfScope`) names it. */
+export type ShownShelf = { kind: 'personal' } | { kind: 'club'; name: string } | { kind: 'buddy'; name: string } | { kind: 'all' };
+
 /** The owner of a stock entry as the form's select value: "personal" or the club's ID. */
 export const ownerOf = (item: Pick<StockItem, 'clubId'>): string => item.clubId ?? 'personal';
 
@@ -210,12 +213,18 @@ export interface ShelfChoice {
 
 /**
  * The owner chips: all shelves, the personal shelf, then each club by name in the user's language
- * (numbers in order, case and accents ignored). Empty without a club, as there is nothing to choose.
+ * (numbers in order, case and accents ignored). Without a club there is nothing to choose: empty, or with `personalOnly`
+ * (a buddy row below needs a way back) the personal chip alone.
  */
-export function shelfChoices(stock: StockItem[], clubs: readonly Pick<Club, 'id' | 'name'>[], locale?: string): ShelfChoice[] {
-  if (!clubs.length) return [];
+export function shelfChoices(
+  stock: StockItem[],
+  clubs: readonly Pick<Club, 'id' | 'name'>[],
+  locale?: string,
+  { personalOnly = false }: { personalOnly?: boolean } = {},
+): ShelfChoice[] {
   const inStock = stock.filter((item) => !isUsedUp(item));
   const count = (owner: string) => inStock.filter((item) => ownerOf(item) === owner).length;
+  if (!clubs.length) return personalOnly ? [{ owner: 'personal', clubName: null, count: count('personal') }] : [];
   const collator = new Intl.Collator(locale, { numeric: true, sensitivity: 'base' });
   const byName = [...clubs].sort((a, b) => collator.compare(a.name, b.name) || a.id.localeCompare(b.id));
   return [

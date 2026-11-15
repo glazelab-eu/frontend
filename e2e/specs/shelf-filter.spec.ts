@@ -444,7 +444,8 @@ test('a long shelf opens with its first rows, gets the others while idle, and a 
   await shell.expectSignedIn(signedIn.displayName);
   const rows = main(page).locator('.shelf-group__list > [data-stock-id]');
   await expect(rows).toHaveCount(30);
-  const titles = await rows.locator('.shelf-row__title').allTextContents();
+  // The used up row sits in a closed <details>: role queries skip it unless told otherwise.
+  const titles = await rows.getByRole('link', { includeHidden: true }).allTextContents();
   // Numbers in numeric order, the used up entry last.
   expect(titles.slice(0, 4).map((title) => title.trim())).toEqual([
     `Shelf ${uid} F-1 Fern`,

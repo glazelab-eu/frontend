@@ -33,7 +33,6 @@
     entryFor,
     filterByOwner,
     formOwnerFor,
-    isUsedUp,
     shelfChoices,
     shelfOwnerFor,
     stockDraftFor,
@@ -41,11 +40,13 @@
     stockFormInput,
     stockFormTotal,
     targetClub,
+    type ShownShelf,
     type StockDraft,
   } from '../../lib/stock/shelf';
   import BarcodeScanner from '../../components/scanning/BarcodeScanner.svelte';
   import ShelfScanSession from '../../components/stock/ShelfScanSession.svelte';
   import BuddyShelfList from '../../components/buddies/BuddyShelfList.svelte';
+  import Callout from '../../components/ui/Callout.svelte';
   import { availabilityDate, buddyHolders, buddyShelfFor, buddyShelves } from '../../lib/stock/buddy-shelf';
 
   interface Props {
@@ -81,23 +82,23 @@
   /** The shelf shown ("personal" or a club's ID), or undefined for all shelves. */
   let shelfOwner = $derived(shelfOwnerFor(shelf, clubs));
   let shownStock = $derived(filterByOwner(stock, shelfOwner));
-  let choices = $derived(shelfChoices(stock, clubs, $locale ?? undefined));
   let ownerClub = $derived(shelfOwner && shelfOwner !== 'personal' ? clubs.find((club) => club.id === shelfOwner) : undefined);
   let glazesById = $derived(glazeMap(glazes));
+  // One derivation per buddy field: `$appStore` changes with every patch (a toast), which must not sort the buddies again.
+  let buddies = $derived($appStore.buddies);
+  let buddyAvailability = $derived($appStore.buddyAvailability);
+  /** Names in order as the club chips are: numbers in order, case and accents ignored. */
+  let collator = $derived(new Intl.Collator($locale ?? 'en', { numeric: true, sensitivity: 'base' }));
   /** The buddies' shelves (which glazes, never amounts), for the second chip row; empty for guests and accounts without buddies. */
-  let buddyChoices = $derived.by(() => {
-    const collator = new Intl.Collator($locale ?? 'en');
-    const holders = buddyHolders($appStore.buddyAvailability, $appStore.buddies, collator);
-    return buddyShelves(holders, $appStore.buddies, (id) => glazesById.has(id), collator);
-  });
+  let buddyChoices = $derived(buddyShelves(buddyHolders(buddyAvailability, buddies, collator), buddies, (id) => glazesById.has(id), collator));
   /** The buddy whose shelf is shown instead of the account's own; a club or the personal shelf is never shown with it. */
   let buddyShelf = $derived(buddyShelfFor(shelf, buddyChoices));
-  /** The account's own chips: without a club a single one for the personal shelf, so there is a way back from a buddy's. */
-  let ownChoices = $derived(
-    choices.length ? choices : buddyChoices.length ? [{ owner: undefined, clubName: null, count: stock.filter((item) => !isUsedUp(item)).length }] : [],
-  );
+  /** The account's own chips; without a club the personal one alone while there is a buddy row, as a way back from a buddy's. */
+  let choices = $derived(shelfChoices(stock, clubs, $locale ?? undefined, { personalOnly: buddyChoices.length > 0 }));
+  /** The current own chip: none while a buddy's shelf is shown; without a club the personal shelf is the whole shelf. */
+  let ownActive = $derived(buddyShelf ? undefined : clubs.length ? shelfOwner : 'personal');
   /** The header's shelf: without a club there is only the personal one. */
-  let scope = $derived<{ kind: 'personal' } | { kind: 'club'; name: string } | { kind: 'buddy'; name: string } | { kind: 'all' }>(
+  let scope = $derived<ShownShelf>(
     buddyShelf
       ? { kind: 'buddy', name: buddyShelf.buddy.displayName }
       : ownerClub
@@ -107,7 +108,7 @@
           : { kind: 'all' },
   );
   let buddyGlazes = $derived(buddyShelf ? buddyShelf.glazeIds.flatMap((id) => glazesById.get(id) ?? []) : []);
-  let buddiesAsOf = $derived(online ? undefined : availabilityDate($appStore.buddyAvailability, $locale ?? 'en'));
+  let buddiesAsOf = $derived(online ? undefined : availabilityDate(buddyAvailability, $locale ?? 'en'));
   /** What an empty shown part of the shelf says: the chosen shelf's own sentence, as "your shelf is empty" would deny the others. */
   let emptyShelf = $derived(
     ownerClub
@@ -263,12 +264,13 @@
     routeBarcodeUsed = routeGlazeUsed = false;
   });
   $effect(() => {
-    if (routeGlazeUsed || !glazeId || !user || loadingNow) return;
+    // Never on a buddy's shelf, which is read only: the link's glaze or code waits for the own shelf.
+    if (routeGlazeUsed || !glazeId || !user || loadingNow || buddyShelf) return;
     routeGlazeUsed = true;
     void chooseStockGlaze(glazeId);
   });
   $effect(() => {
-    if (routeBarcodeUsed || !barcode || !user || loadingNow) return;
+    if (routeBarcodeUsed || !barcode || !user || loadingNow || buddyShelf) return;
     routeBarcodeUsed = true;
     const code = normalizeBarcode(barcode);
     if (code) void useBarcode(code);
@@ -303,16 +305,16 @@
 {#if user}
   <!-- Before the account's data arrives the clubs are unknown, so the header would name the wrong shelf. -->
   {#if shown}<ShelfScope {scope} />{/if}
-  {#if ownChoices.length}
+  {#if choices.length}
     <div class="stock-shelves">
       <ChipRow
         label={$t('stock.shelves.label')}
-        active={buddyShelf ? undefined : shelfOwner}>
-        {#each ownChoices as choice (choice.owner ?? 'all')}
+        active={ownActive}>
+        {#each choices as choice (choice.owner ?? 'all')}
           <FilterChip
-            label={choice.owner === undefined && clubs.length ? $t('stock.shelves.all') : (choice.clubName ?? $t('stock.owner.me'))}
+            label={choice.owner === undefined ? $t('stock.shelves.all') : (choice.clubName ?? $t('stock.owner.me'))}
             count={choice.count}
-            active={!buddyShelf && choice.owner === shelfOwner}
+            active={!buddyShelf && choice.owner === ownActive}
             href={chipHref(choice.owner)} />
         {/each}
       </ChipRow>
@@ -333,21 +335,23 @@
       </ChipRow>
     </div>
   {/if}
-  <div class={['button-row', 'stock-entry-actions', { 'stock-entry-actions--hidden': buddyShelf }]}>
-    <button
-      type="button"
-      class="button button--primary"
-      onclick={startScan}>
-      {$t('stock.scan.button')}
-    </button>
-    <button
-      type="button"
-      class="button"
-      disabled={!stockForm}
-      onclick={focusStockForm}>
-      {$t('addGlaze.action')}
-    </button>
-  </div>
+  {#if !buddyShelf}
+    <div class="button-row stock-entry-actions">
+      <button
+        type="button"
+        class="button button--primary"
+        onclick={startScan}>
+        {$t('stock.scan.button')}
+      </button>
+      <button
+        type="button"
+        class="button"
+        disabled={!stockForm}
+        onclick={focusStockForm}>
+        {$t('addGlaze.action')}
+      </button>
+    </div>
+  {/if}
 {/if}
 {#if !user}
   <SignInEmpty
@@ -358,173 +362,190 @@
   <RouteStatus
     status="loading"
     progress={progressOf($appStore.sync)} />
-{:else if buddyShelf}
-  <!-- A buddy's shelf is read only: no form, so nothing typed here can look like a write to it. -->
-  <section class="panel stock-list">
-    <PanelTitle title={$t('stock.buddy.title', { values: { name: buddyShelf.buddy.displayName } })} />
-    <BuddyShelfList
-      buddy={buddyShelf.buddy}
-      glazes={buddyGlazes}
-      userId={user.id}
-      asOf={buddiesAsOf}
-      onShare={app.shareMessage} />
-  </section>
 {:else}
-  <div class="layout-columns">
-    {#if stock.length}
-      <section class="panel stock-list">
-        <PanelTitle title={$t('stock.list.title')} />
-        <RefreshHint refreshing={refreshing(loadingNow, loaded)} />
-        <ShelfList
-          bind:this={shelfList}
-          stock={shownStock}
-          empty={emptyShelf}
-          {glazesById}
-          clubMembers={$appStore.clubMembers}
-          userId={user.id}
-          {online}
-          onSave={(input) => app.saveStock(input, true)}
-          onRemove={async (id) => {
-            const removed = await app.removeStock(id);
-            if (removed && !$appStore.stock.length) {
-              await tick();
-              focusStockForm();
-            }
-            return removed;
-          }}
-          onKeepPrivate={app.setKeepPrivate} />
-      </section>
-    {/if}
-    <section
-      class="panel stock-form"
-      bind:this={stockForm}
-      onfocusin={showAllSoon}>
-      <PanelTitle title={$t('stock.form.title')} />
-      {#if !stock.length}<p class="panel__message">{emptyShelf}</p>{/if}
-      <form
-        onsubmit={(event) => {
-          event.preventDefault();
-          onSaveStock();
-        }}>
-        <div class="stock-scan">
-          <button
-            type="button"
-            class="button stock-scan__button"
-            disabled={finding}
-            onclick={(event) => {
-              event.preventDefault();
-              startScan();
-            }}>
-            {$t('barcodes.scan')}
-          </button>
-          {#if scanned}
-            <p
-              class="stock-scan__result"
-              role="status">
-              {scanned.glaze
-                ? $t('barcodes.stock.found', { values: { glaze: glazeTitle(scanned.glaze) } })
-                : $t('barcodes.stock.unknown', { values: { barcode: scanned.barcode } })}
+  {#if buddyShelf}
+    <!-- A buddy's shelf is read only: the own list and form are hidden, never unmounted, so their filter and draft wait. -->
+    <section class="panel stock-list">
+      <PanelTitle title={$t('stock.buddy.title', { values: { name: buddyShelf.buddy.displayName } })} />
+      {#if formDirty}
+        {@const draftGlaze = glazesById.get(stockGlaze)}
+        <div class="stock-draft">
+          <Callout tone="neutral">
+            <p class="stock-draft__text">
+              {$t('stock.buddy.draft', { values: { glaze: draftGlaze ? glazeTitle(draftGlaze) : '' } })}
+              <a href={chipHref(stockOwner)}>{$t('stock.buddy.draftBack')}</a>
             </p>
-            {#if !scanned.glaze}
-              {@const code = scanned.barcode}
-              <button
-                type="button"
-                class="button"
-                onclick={() => openAdd(code)}>
-                {$t('barcodes.discover.add')}
-              </button>
-            {/if}
-          {/if}
+          </Callout>
         </div>
-        <GlazePicker
-          {glazes}
-          selectedId={stockGlaze}
-          onSelect={(id) => chooseEntry(id)}
-          bind:text={glazeText}
-          label={$t('common.glaze')}
-          placeholder={$t('stock.form.glazePlaceholder')}
-          onAdd={() => openAdd()} />
-        {#if entry}
-          <fieldset class="stock-mode">
-            <legend class="stock-mode__legend">{$t('stock.form.mode')}</legend>
-            <label class="stock-mode__option">
-              <input
-                type="radio"
-                name="stock-mode"
-                value="set"
-                bind:group={draft.mode} />
-              {$t('stock.form.modeSet')}
-            </label>
-            <label class="stock-mode__option">
-              <input
-                type="radio"
-                name="stock-mode"
-                value="jar"
-                bind:group={draft.mode} />
-              {$t('stock.form.modeJar')}
-            </label>
-          </fieldset>
-        {/if}
-        <ShelfSelect
-          value={stockOwner}
-          {clubs}
-          onChange={(owner) => chooseEntry(stockGlaze, owner)} />
-        <div class="stock-fields">
-          {#if mode === 'set'}
+      {/if}
+      {#key buddyShelf.buddy.id}
+        <BuddyShelfList
+          buddy={buddyShelf.buddy}
+          glazes={buddyGlazes}
+          userId={user.id}
+          asOf={buddiesAsOf}
+          onShare={app.shareMessage} />
+      {/key}
+    </section>
+  {/if}
+  <!-- A plain wrapper: `.layout-columns` sets its own display, which would win over `hidden`. -->
+  <div hidden={!!buddyShelf}>
+    <div class="layout-columns">
+      {#if stock.length}
+        <section class="panel stock-list">
+          <PanelTitle title={$t('stock.list.title')} />
+          <RefreshHint refreshing={refreshing(loadingNow, loaded)} />
+          <ShelfList
+            bind:this={shelfList}
+            stock={shownStock}
+            empty={emptyShelf}
+            {glazesById}
+            clubMembers={$appStore.clubMembers}
+            userId={user.id}
+            {online}
+            onSave={(input) => app.saveStock(input, true)}
+            onRemove={async (id) => {
+              const removed = await app.removeStock(id);
+              if (removed && !$appStore.stock.length) {
+                await tick();
+                focusStockForm();
+              }
+              return removed;
+            }}
+            onKeepPrivate={app.setKeepPrivate} />
+        </section>
+      {/if}
+      <section
+        class="panel stock-form"
+        bind:this={stockForm}
+        onfocusin={showAllSoon}>
+        <PanelTitle title={$t('stock.form.title')} />
+        {#if !stock.length}<p class="panel__message">{emptyShelf}</p>{/if}
+        <form
+          onsubmit={(event) => {
+            event.preventDefault();
+            onSaveStock();
+          }}>
+          <div class="stock-scan">
+            <button
+              type="button"
+              class="button stock-scan__button"
+              disabled={finding}
+              onclick={(event) => {
+                event.preventDefault();
+                startScan();
+              }}>
+              {$t('barcodes.scan')}
+            </button>
+            {#if scanned}
+              <p
+                class="stock-scan__result"
+                role="status">
+                {scanned.glaze
+                  ? $t('barcodes.stock.found', { values: { glaze: glazeTitle(scanned.glaze) } })
+                  : $t('barcodes.stock.unknown', { values: { barcode: scanned.barcode } })}
+              </p>
+              {#if !scanned.glaze}
+                {@const code = scanned.barcode}
+                <button
+                  type="button"
+                  class="button"
+                  onclick={() => openAdd(code)}>
+                  {$t('barcodes.discover.add')}
+                </button>
+              {/if}
+            {/if}
+          </div>
+          <GlazePicker
+            {glazes}
+            selectedId={stockGlaze}
+            onSelect={(id) => chooseEntry(id)}
+            bind:text={glazeText}
+            label={$t('common.glaze')}
+            placeholder={$t('stock.form.glazePlaceholder')}
+            onAdd={() => openAdd()} />
+          {#if entry}
+            <fieldset class="stock-mode">
+              <legend class="stock-mode__legend">{$t('stock.form.mode')}</legend>
+              <label class="stock-mode__option">
+                <input
+                  type="radio"
+                  name="stock-mode"
+                  value="set"
+                  bind:group={draft.mode} />
+                {$t('stock.form.modeSet')}
+              </label>
+              <label class="stock-mode__option">
+                <input
+                  type="radio"
+                  name="stock-mode"
+                  value="jar"
+                  bind:group={draft.mode} />
+                {$t('stock.form.modeJar')}
+              </label>
+            </fieldset>
+          {/if}
+          <ShelfSelect
+            value={stockOwner}
+            {clubs}
+            onChange={(owner) => chooseEntry(stockGlaze, owner)} />
+          <div class="stock-fields">
+            {#if mode === 'set'}
+              <label class="form-field">
+                {$t('stock.form.quantity')}
+                <input
+                  bind:this={quantityInput}
+                  class="form-field__control"
+                  type="number"
+                  inputmode="numeric"
+                  min="0"
+                  max={MAX_STOCK_G}
+                  step="1"
+                  bind:value={draft.amount}
+                  required />
+              </label>
+            {/if}
             <label class="form-field">
-              {$t('stock.form.quantity')}
+              {mode === 'jar' ? $t('stock.form.jarAdd') : $t('stock.form.jarSize')}
+              {#if mode === 'set'}
+                <span class="form-field__optional">
+                  ({$t('common.optional')})
+                </span>
+              {/if}
               <input
-                bind:this={quantityInput}
                 class="form-field__control"
                 type="number"
                 inputmode="numeric"
-                min="0"
-                max={MAX_STOCK_G}
+                min="1"
+                max={MAX_JAR_G}
                 step="1"
-                bind:value={draft.amount}
-                required />
+                bind:value={draft.jar}
+                required={mode === 'jar'} />
             </label>
+          </div>
+          {#if entry}
+            <p
+              class="stock-scan__current"
+              role="status">
+              {mode === 'jar' && total !== null
+                ? $t('stock.form.total', { values: { quantity: $formatNumber(total) } })
+                : $t('stock.form.current', { values: { quantity: $formatNumber(entry.quantityG) } })}
+            </p>
           {/if}
-          <label class="form-field">
-            {mode === 'jar' ? $t('stock.form.jarAdd') : $t('stock.form.jarSize')}
-            {#if mode === 'set'}
-              <span class="form-field__optional">
-                ({$t('common.optional')})
-              </span>
+          <OfflineNote {online} />
+          <FormError message={formError('stock')} />
+          <button
+            class="button button--primary"
+            disabled={busy || !online}>
+            {#if formClub}
+              {$t(entry ? 'stock.target.updateClub' : 'stock.target.addClub', { values: { club: formClub.name } })}
+            {:else}
+              {$t(entry ? 'stock.target.update' : 'stock.target.add')}
             {/if}
-            <input
-              class="form-field__control"
-              type="number"
-              inputmode="numeric"
-              min="1"
-              max={MAX_JAR_G}
-              step="1"
-              bind:value={draft.jar}
-              required={mode === 'jar'} />
-          </label>
-        </div>
-        {#if entry}
-          <p
-            class="stock-scan__current"
-            role="status">
-            {mode === 'jar' && total !== null
-              ? $t('stock.form.total', { values: { quantity: $formatNumber(total) } })
-              : $t('stock.form.current', { values: { quantity: $formatNumber(entry.quantityG) } })}
-          </p>
-        {/if}
-        <OfflineNote {online} />
-        <FormError message={formError('stock')} />
-        <button
-          class="button button--primary"
-          disabled={busy || !online}>
-          {#if formClub}
-            {$t(entry ? 'stock.target.updateClub' : 'stock.target.addClub', { values: { club: formClub.name } })}
-          {:else}
-            {$t(entry ? 'stock.target.update' : 'stock.target.add')}
-          {/if}
-        </button>
-      </form>
-    </section>
+          </button>
+        </form>
+      </section>
+    </div>
   </div>
 {/if}
 {#if scanning && user}
@@ -580,6 +601,12 @@
     /* A grid item is as wide as its widest content by default; long glaze titles wrap instead. */
     min-width: 0;
   }
+  .stock-draft {
+    margin-bottom: var(--space-3);
+  }
+  .stock-draft__text {
+    margin: 0;
+  }
   .stock-shelves {
     /* The chip row's own flex rules (a line that scrolls sideways on phones) need a flex parent. */
     display: flex;
@@ -594,9 +621,6 @@
       display: flex;
       width: 100%;
       margin-bottom: var(--space-4);
-    }
-    .stock-entry-actions--hidden {
-      display: none;
     }
     .stock-scan__button {
       display: none;

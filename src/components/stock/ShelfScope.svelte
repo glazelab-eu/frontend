@@ -2,12 +2,11 @@
   import { t } from '../../lib/i18n';
   import Callout from '../ui/Callout.svelte';
   import Icon from '../ui/Icon.svelte';
-
-  type ShelfScopeKind = { kind: 'personal' } | { kind: 'club'; name: string } | { kind: 'buddy'; name: string } | { kind: 'all' };
+  import type { ShownShelf } from '../../lib/stock/shelf';
 
   interface Props {
     /** The shelf shown: the personal one, a club's or a buddy's (with its name), or all of the account's. */
-    scope: ShelfScopeKind;
+    scope: ShownShelf;
   }
 
   let { scope }: Props = $props();

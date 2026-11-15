@@ -5,7 +5,7 @@
 - `#/terms` and `#/about` are static pages: no request and no state, so they open offline from the precached shell for guests and members.
 - `routeKey` ignores what must not remount the page:
   - the discover query (`type`, `q`, `tags`, `glaze`, `quick`, `cone`, `atmosphere`, `sort`; stable order, defaults left out, invalid values dropped; `#/glazes` and `#/combinations` still parse);
-  - the shelf's `shelf` (`#/stock?shelf=personal|<clubId>`, `#/stock/<barcode>?shelf=…`), or a chip change would lose the add-form draft. `glaze` and the barcode stay in the key; `StockPage.chipHref` keeps them.
+  - the shelf's `shelf` (`#/stock?shelf=personal|<clubId>|<buddy's user ID>`, `#/stock/<barcode>?shelf=…`; `shelfOf` checks only the ID's shape, the page resolves clubs and buddies), or a chip change would lose the add-form draft. `glaze` and the barcode stay in the key; `StockPage.chipHref` keeps them.
 - Explore: typing replaces the history entry (debounced); a committed filter change pushes one.
 - Item routes may carry `?photo=<image ID>` (`PictureCarousel` `focusPhoto`, opened once). It is a one-time pointer: `withoutPhotoPointer` drops it from the recorded predecessor and from `canonicalUrl`, so it never reaches `history.state`, back links or shared links.
 - `history.state` holds the session marker, the previous safe route, list positions and Explore's reveal of photo-free items (its route only); never token or unknown routes, item metadata or account data. A reload starts a new session.
