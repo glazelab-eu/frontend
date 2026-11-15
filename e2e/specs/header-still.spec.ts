@@ -45,8 +45,14 @@ const accountItems = (page: Page) =>
     [...header.querySelectorAll('.header-account select, .header-account__install, .feed-bell, .header-account__name, .header-account__button')]
       .filter((item) => getComputedStyle(item).visibility === 'visible')
       .map((item) => {
-        const { x, width } = item.getBoundingClientRect();
-        return [item.className.split(' ')[0], Math.round(x * 10) / 10, Math.round(width * 10) / 10] as [string, number, number];
+        const { x, width, right } = item.getBoundingClientRect();
+        // The right edge is rounded once from the layout's own value: x and width rounded apart can add up 0.1 px off.
+        return [item.className.split(' ')[0], Math.round(x * 10) / 10, Math.round(width * 10) / 10, Math.round(right * 10) / 10] as [
+          string,
+          number,
+          number,
+          number,
+        ];
       }),
   );
 type Item = Awaited<ReturnType<typeof accountItems>>[number];
@@ -62,9 +68,9 @@ function expectStill(before: Item[], after: Item[], label: string): void {
   expect(name(after)[2], `${label}: the name only gives way`).toBeLessThan(name(before)[2]);
   expect(name(after)[2], `${label}: the name keeps a minimum`).toBeGreaterThanOrEqual(40);
   expect(
-    rightOf(after).map(([cls, x, width]) => [cls, Math.round((x + width) * 10) / 10]),
+    rightOf(after).map(([cls, , , right]) => [cls, right]),
     label,
-  ).toEqual(rightOf(before).map(([cls, x, width]) => [cls, Math.round((x + width) * 10) / 10]));
+  ).toEqual(rightOf(before).map(([cls, , , right]) => [cls, right]));
 }
 
 for (const locale of locales) {
