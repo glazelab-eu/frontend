@@ -114,7 +114,9 @@ async function overflowing(page: Page, words: string[]): Promise<string[]> {
         if (hidden(field) || field.value || !field.checkVisibility({ visibilityProperty: true })) continue;
         const style = getComputedStyle(field);
         context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-        const room = field.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        // The box less its borders and padding, never `clientWidth`: Chromium 157 answers an input's `clientWidth` without the padding.
+        const edges = ['borderLeftWidth', 'paddingLeft', 'paddingRight', 'borderRightWidth'] as const;
+        const room = field.getBoundingClientRect().width - edges.reduce((sum, edge) => sum + parseFloat(style[edge]), 0);
         const needed = context.measureText(field.placeholder).width;
         if (needed > room + 1) problems.push(`placeholder cut off (${Math.round(needed)} > ${Math.round(room)}): "${field.placeholder}"`);
       }
