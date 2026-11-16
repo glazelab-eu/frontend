@@ -45,6 +45,8 @@ describe('names and sizes', () => {
     expect(jpegName('IMG_0001.HEIC')).toBe('IMG_0001.jpg');
     expect(jpegName('a.b.heif')).toBe('a.b.jpg');
     expect(jpegName('noext')).toBe('noext.jpg');
+    expect(jpegName('scan.png')).toBe('scan.jpg');
+    expect(jpegName('PXL_0001.JPG')).toBe('PXL_0001.jpg');
   });
 
   it('keeps the size, scales down only above the pixel limit and never enlarges', () => {

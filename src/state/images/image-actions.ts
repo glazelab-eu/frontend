@@ -3,7 +3,8 @@ import type { ImageInfo, UploadTarget } from '../../lib/api/models';
 import type { ImageDetailsChange, ImageUploadInput, ImageVisibilityChange } from '../../lib/api/inputs';
 import { dropCachedImages } from '../../lib/offline/offline';
 import { uploadFailureMessage } from '../../lib/images/heic';
-import type { UploadResult, UploadVisibility } from '../../lib/images/upload-queue';
+import { fitFailureMessage, fitForUpload } from '../../lib/images/upload-fit';
+import { MAX_UPLOAD_BYTES, type UploadResult, type UploadVisibility } from '../../lib/images/upload-queue';
 import { withImage, withNewImage, withoutImage, type AppState } from '../app/app-state';
 import type { AppContext } from '../app/context';
 import { GONE, ifGone } from '../app/gone';
@@ -27,7 +28,11 @@ export function createImageActions(
    * their place and nodes); the dialog stays open and reports per file, so this answers why a file
    * failed instead of showing it, and whether later files would fail the same way.
    */
-  async function uploadImage(input: ImageUploadInput): Promise<UploadResult> {
+  async function uploadImage(original: ImageUploadInput): Promise<UploadResult> {
+    // A photo above the API's pixel limit goes scaled down (`fitForUpload`); one the browser cannot scale is refused at its file.
+    const fitted = await fitForUpload(original.file, MAX_UPLOAD_BYTES);
+    if (!fitted.ok) return { ok: false, message: fitFailureMessage(fitted.reason), stop: false };
+    const input = fitted.file === original.file ? original : { ...original, file: fitted.file };
     let failure: unknown;
     const done = await ctx.mutate({
       request: async () => {
@@ -50,7 +55,7 @@ export function createImageActions(
     ctx.patch({ formError: null }); // `form` above only kept the failure off the banner; the dialog shows it at the file.
     const status = failure instanceof ApiError ? failure.status : -1;
     // Offline, signed out, terms to accept or rate limited: the next file would fail the same way.
-    return { ok: false, message: uploadFailureMessage(input.file, errorMessage(failure)), stop: [0, 401, 428, 429].includes(status) };
+    return { ok: false, message: uploadFailureMessage(original.file, errorMessage(failure)), stop: [0, 401, 428, 429].includes(status) };
   }
 
   /**
