@@ -102,7 +102,8 @@ export type Route =
   | { name: 'club'; id: string }
   /**
    * A scanned barcode (#/stock/<barcode>) selects its glaze or pre-fills the new-glaze form; `shelf`
-   * (`?shelf=personal` or a club's ID, on either form of the link) shows one owner's part of the shelf.
+   * (`?shelf=personal`, a club's ID or a buddy's user ID, on either form of the link) shows one owner's part of the shelf or,
+   * read only, a buddy's.
    */
   | { name: 'stock'; barcode?: string; glaze?: string; shelf?: string }
   | { name: 'studio'; id?: string; from?: string; glaze?: string }

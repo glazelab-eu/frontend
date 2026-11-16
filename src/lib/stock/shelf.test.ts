@@ -817,6 +817,10 @@ describe('shelf owner filter', () => {
     expect(shelfChoices(stock, [])).toEqual([]);
   });
 
+  it('offers the personal chip alone without a club when a buddy row needs a way back', () => {
+    expect(shelfChoices(stock, [], 'en', { personalOnly: true })).toEqual([{ owner: 'personal', clubName: null, count: 1 }]);
+  });
+
   it('lists all shelves, personal and the clubs by name with the entries in stock', () => {
     const clubs = [kiln, { id: 'k2', name: 'atelier' }, { id: 'k3', name: 'Élan' }, { id: 'k4', name: 'Studio 10' }, { id: 'k5', name: 'Studio 2' }];
     expect(shelfChoices(stock, clubs, 'en').map(({ owner, clubName, count }) => [owner, clubName, count])).toEqual([

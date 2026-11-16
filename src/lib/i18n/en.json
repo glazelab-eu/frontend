@@ -1636,5 +1636,13 @@
   "errors.wishlistItemFields": "An item entry takes no glaze.",
   "errors.wishlistNameRequired": "Give the item a name.",
   "errors.wishlistLinkInvalid": "Enter a link that starts with http:// or https://, without spaces or sign-in details, up to 2000 characters.",
-  "errors.wishlistLinkRequired": "Add a link for the item."
+  "errors.wishlistLinkRequired": "Add a link for the item.",
+  "stock.shelves.buddies": "Buddies",
+  "stock.scope.buddy": "Buddy's shelf",
+  "stock.scope.buddyHint": "Only which glazes your buddy has, never amounts. Only they change it.",
+  "stock.buddy.title": "On {name}'s shelf",
+  "stock.buddy.hint": "Glazes {name} keeps private are not listed.",
+  "stock.buddy.empty": "{name} has no glazes on their shelf that you can see.",
+  "stock.buddy.draft": "Your unsaved entry for {glaze} is still waiting on your own shelf.",
+  "stock.buddy.draftBack": "Back to your entry"
 }

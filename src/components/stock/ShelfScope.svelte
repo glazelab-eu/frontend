@@ -2,10 +2,11 @@
   import { t } from '../../lib/i18n';
   import Callout from '../ui/Callout.svelte';
   import Icon from '../ui/Icon.svelte';
+  import type { ShownShelf } from '../../lib/stock/shelf';
 
   interface Props {
-    /** The shelf shown: the personal one, a club's (with its name) or all of them. */
-    scope: { kind: 'personal' } | { kind: 'club'; name: string } | { kind: 'all' };
+    /** The shelf shown: the personal one, a club's or a buddy's (with its name), or all of the account's. */
+    scope: ShownShelf;
   }
 
   let { scope }: Props = $props();
@@ -29,6 +30,10 @@
       <p class="shelf-scope__kind">{$t('stock.scope.club')}</p>
       <p class="shelf-scope__name">{scope.name}</p>
       <p class="shelf-scope__hint">{$t('stock.scope.clubHint')}</p>
+    {:else if scope.kind === 'buddy'}
+      <p class="shelf-scope__kind">{$t('stock.scope.buddy')}</p>
+      <p class="shelf-scope__name">{scope.name}</p>
+      <p class="shelf-scope__hint">{$t('stock.scope.buddyHint')}</p>
     {:else if scope.kind === 'personal'}
       <p class="shelf-scope__name">{$t('stock.scope.personal')}</p>
       <p class="shelf-scope__hint">{$t('stock.scope.personalHint')}</p>

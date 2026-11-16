@@ -45,6 +45,14 @@ People must never change club stock by accident.
 - `.stock-shelves` is a flex parent (the chip row's sideways scrolling needs it); `.stock-list` keeps `min-width: 0` as a grid item.
 - The back link names the club when the club page is the recorded predecessor (`previousRoute`).
 
+## Buddies' shelves (`?shelf=<buddy's user ID>`)
+
+- With an accepted buddy, a second `ui/ChipRow` ("Buddies") stands under the own shelves' row: every buddy by name (the club chips' collator), the count is the glazes of `buddyShelves` (`lib/stock/buddy-shelf.ts`: availability of `buddyHolders`, only glazes of the loaded library). Without a club the first row is then the Personal chip alone (`shelfChoices` `personalOnly`), so there is a way back.
+- One `?shelf=` parameter, so a buddy and an own shelf are never chosen together: `buddyShelfFor` resolves a buddy, and while one is shown no chip of the first row is current. A former buddy's or unknown ID shows all own shelves, as an unknown club does. The page reads `buddies` and `buddyAvailability` through one `$derived` each.
+- What shows is the terms' buddy rule and nothing more: which glazes, never amounts, jar sizes or kept-private entries (the API's availability; no extra endpoint). `ShelfScope` names the buddy (`stock.scope.buddy`); `buddies/BuddyShelfList` lists the glazes (`stock/ShelfGlaze`, the own rows' look) with one `AskBuddy` each (glaze message), `stock/ShelfFilter` from `SHELF_FILTER_FROM`, rows in idle slices after `SHELF_FIRST_ROWS` as on the own shelf, and offline the availability date.
+- Read only: the own list and form stay mounted but `hidden` (their filter and draft survive the chip change), the phone scan actions are not rendered, and the link's `glaze` or barcode is used only once an own shelf is shown. A draft with typed input keeps its leave guard and is named above the buddy's list with a link back (`stock.buddy.draft`).
+- Behaviour: `buddy-shelf-view.spec.ts`; axe: `a11y.spec.ts` "Shelf showing a buddy's shelf".
+
 ## Additions vs. amounts (backend "Stock")
 
 - `app.saveStock` takes a `StockWrite` (`lib/api/inputs.ts`): a `StockInput` sets the amount (`POST /api/stock`, last write wins); a `StockAddInput` adds grams to what the server holds (`POST /api/stock/add`, `isAddition`), and the listing takes the answered entry (`withStockEntry`; an entry not listed yet reloads).

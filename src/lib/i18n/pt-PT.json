@@ -1636,5 +1636,13 @@
   "errors.wishlistItemFields": "Uma entrada de artigo não leva vidrado.",
   "errors.wishlistNameRequired": "Dá um nome ao artigo.",
   "errors.wishlistLinkInvalid": "Escreve um link que comece por http:// ou https://, sem espaços nem dados de acesso, até 2000 caracteres.",
-  "errors.wishlistLinkRequired": "Adiciona um link para o artigo."
+  "errors.wishlistLinkRequired": "Adiciona um link para o artigo.",
+  "stock.shelves.buddies": "Parceiros",
+  "stock.scope.buddy": "Prateleira de um parceiro",
+  "stock.scope.buddyHint": "Só que vidrados tem, nunca quantidades. Só o seu parceiro a altera.",
+  "stock.buddy.title": "Na prateleira de {name}",
+  "stock.buddy.hint": "Os vidrados que {name} mantém privados não aparecem.",
+  "stock.buddy.empty": "{name} não tem vidrados na prateleira que possa ver.",
+  "stock.buddy.draft": "A sua entrada por guardar de {glaze} continua à espera na sua prateleira.",
+  "stock.buddy.draftBack": "Voltar à sua entrada"
 }

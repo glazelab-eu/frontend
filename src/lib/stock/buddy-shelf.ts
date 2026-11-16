@@ -122,3 +122,41 @@ export const askMessageKey = (
   link: string | null,
 ): 'buddies.shelf.message' | 'buddies.shelf.messageNoLink' | 'buddies.shelf.messageGlaze' =>
   title === null ? 'buddies.shelf.messageGlaze' : link ? 'buddies.shelf.message' : 'buddies.shelf.messageNoLink';
+
+/** One buddy's shelf as the availability tells it: which glazes they have, never amounts (the terms' buddy rule). */
+export interface BuddyShelf {
+  buddy: BuddyName;
+  /** The glazes they have (the chip's count), in the availability's order. */
+  glazeIds: string[];
+}
+
+/**
+ * The shelf page's buddy chips: every accepted buddy by name, each with the glazes they have that `known` accepts (the loaded
+ * library, so a chip never counts a glaze the list cannot show). A buddy with nothing to show still has a chip.
+ */
+export function buddyShelves(
+  holders: BuddyHolders,
+  buddies: Pick<Buddies, 'buddies'>,
+  known: (glazeId: string) => boolean,
+  collator?: Intl.Collator,
+): BuddyShelf[] {
+  const compare = collator ?? new Intl.Collator();
+  const byBuddy = new Map<string, string[]>();
+  for (const [glazeId, list] of holders) {
+    if (!known(glazeId)) continue;
+    for (const buddy of list) {
+      const ids = byBuddy.get(buddy.id);
+      if (ids) ids.push(glazeId);
+      else byBuddy.set(buddy.id, [glazeId]);
+    }
+  }
+  const seen = new Set<string>();
+  return buddies.buddies
+    .filter((buddy) => !seen.has(buddy.id) && seen.add(buddy.id))
+    .map((buddy) => ({ buddy: { id: buddy.id, displayName: buddy.displayName }, glazeIds: byBuddy.get(buddy.id) ?? [] }))
+    .sort((a, b) => compare.compare(a.buddy.displayName, b.buddy.displayName) || a.buddy.id.localeCompare(b.buddy.id));
+}
+
+/** The buddy shelf a `?shelf=` link names, or undefined: a club, the personal shelf, or somebody no longer a buddy. */
+export const buddyShelfFor = (shelf: string | undefined, shelves: readonly BuddyShelf[]): BuddyShelf | undefined =>
+  shelf ? shelves.find((entry) => entry.buddy.id === shelf) : undefined;

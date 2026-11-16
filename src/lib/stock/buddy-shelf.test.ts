@@ -10,6 +10,8 @@ import {
   availabilityDay,
   buddyCover,
   buddyHolders,
+  buddyShelfFor,
+  buddyShelves,
   emptyAvailability,
   groupCover,
   markNames,
@@ -186,5 +188,32 @@ describe('askMessageKey', () => {
     expect(askMessageKey(null, null)).toBe('buddies.shelf.messageGlaze');
     expect(askMessageKey(null, 'https://x/')).toBe('buddies.shelf.messageGlaze');
     expect(askMessageKey('', null)).toBe('buddies.shelf.messageNoLink');
+  });
+});
+
+describe('buddyShelves', () => {
+  const known = (id: string) => id !== 'gone';
+  it('lists every accepted buddy by name with the known glazes they have', () => {
+    const holders = buddyHolders({ glazes: [entry('g1', ben, ada), entry('g2', ada), entry('gone', ben)] }, accepted(ben, ada, cy));
+    expect(buddyShelves(holders, accepted(ben, ada, cy), known, new Intl.Collator('en'))).toEqual([
+      { buddy: ada, glazeIds: ['g1', 'g2'] },
+      { buddy: ben, glazeIds: ['g1'] },
+      { buddy: cy, glazeIds: [] },
+    ]);
+  });
+
+  it('leaves out anybody the lists no longer call a buddy and lists a buddy once', () => {
+    const holders = buddyHolders({ glazes: [entry('g1', ben, ada)] }, accepted(ada));
+    expect(buddyShelves(holders, accepted(ada, ada), known)).toEqual([{ buddy: ada, glazeIds: ['g1'] }]);
+  });
+});
+
+describe('buddyShelfFor', () => {
+  const shelves = [{ buddy: ada, glazeIds: ['g1'] }];
+  it('resolves a buddy link and ignores clubs, the personal shelf and former buddies', () => {
+    expect(buddyShelfFor('u2', shelves)).toBe(shelves[0]);
+    expect(buddyShelfFor('personal', shelves)).toBeUndefined();
+    expect(buddyShelfFor('u3', shelves)).toBeUndefined();
+    expect(buddyShelfFor(undefined, shelves)).toBeUndefined();
   });
 });

@@ -22,6 +22,7 @@
   import OfflineNote from '../common/OfflineNote.svelte';
   import Callout from '../ui/Callout.svelte';
   import Icon from '../ui/Icon.svelte';
+  import ShelfFilter from './ShelfFilter.svelte';
   import ShelfRow from './ShelfRow.svelte';
 
   interface Props {
@@ -110,14 +111,7 @@
     {online}
     message={$t('stock.list.offline')} />
   {#if filterable}
-    <label class="form-field shelf-filter">
-      {$t('stock.list.filter')}
-      <input
-        class="form-field__control"
-        type="search"
-        placeholder={$t('stock.list.filterPlaceholder')}
-        bind:value={query} />
-    </label>
+    <ShelfFilter bind:value={query} />
   {/if}
   {#each shownGroups as group (group.key)}
     <section
@@ -196,9 +190,6 @@
 </div>
 
 <style>
-  .shelf-filter {
-    margin-bottom: var(--space-3);
-  }
   .shelf-group {
     margin-bottom: var(--space-5);
   }
