@@ -17,6 +17,13 @@
 - `app.uploadImage` maps the API's `Unsupported image` for a HEIC-looking file to the same message (`uploadFailureMessage`).
 - The inputs keep `accept="image/*"`: an explicit `image/heic` makes iOS hand over HEIC originals instead of converting library picks to JPEG.
 
+## Pixel limit (`lib/images/upload-fit.ts`)
+
+- The API refuses more than 24 MP (`ImageEncoder.MAX_PIXELS`, `Image dimensions are too large`), while a 48 or 50 MP camera's JPEG often stays under `MAX_UPLOAD_BYTES`.
+- `app.uploadImage` sends `fitForUpload(file)`: a photo whose header (`readImageSize`) states more than `MAX_UPLOAD_PIXELS` is redrawn as a JPEG by the HEIC path's `toJpeg` (at most 4096 × 4096 px, falling quality), before the write starts; any other file goes as it is.
+- A photo the browser cannot redraw is never sent: its row fails with `errors.imageDimensions` (`errors.imageTooBig` when no quality fits). Retry tries again.
+- The scaled copy is made per request and never kept; the row and its preview keep the original. Focus is in percent and survives the scaling.
+
 ## Focus (`images/PhotoFocusDialog`, `lib/images/photo-focus.ts`)
 
 - Optional per photo in `UploadFileList` (upload dialog and Studio); the photo is always sent whole and the item keeps only `focus` (`{x, y}` or null, `focused`), sent as `focusX`/`focusY` (backend "Photos"). Set and reset only while the photo is chosen or failed (`canFocus`).

@@ -2234,6 +2234,19 @@ describe('late mutation results', () => {
       expect(await app.uploadImage(upload())).toEqual({ ok: false, message: 'Unsupported image', stop: false });
     });
 
+    it('never sends a photo above the API’s 24 MP that this browser cannot scale down, and says why at the file', async () => {
+      const posted = vi.fn(() => Response.json(image));
+      routes['GET /api/auth/csrf'] = () => Response.json({ token: 'csrf' });
+      routes['POST /api/glazes/g1/images'] = posted;
+      const { app } = await loaded();
+      // A 58 MP (8800 × 6600) PNG header; the test browser has no `createImageBitmap`, so the photo cannot be redrawn.
+      const header = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0x22, 0x60, 0, 0, 0x19, 0xc8, 8, 6, 0, 0, 0];
+      const large = new File([Uint8Array.from(header)], 'large.png', { type: 'image/png' });
+      expect(await app.uploadImage({ ...upload(), file: large })).toEqual({ ok: false, message: 'errors.imageDimensions', stop: false });
+      expect(posted).not.toHaveBeenCalled();
+      expect(get(app.state)).toMatchObject({ error: '', formError: null });
+    });
+
     it('asks for the terms on a 428 and tells the queue to stop', async () => {
       routes['GET /api/auth/csrf'] = () => Response.json({ token: 'csrf' });
       routes['POST /api/glazes/g1/images'] = () => Response.json({ error: 'Terms not accepted' }, { status: 428 });

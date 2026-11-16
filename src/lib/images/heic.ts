@@ -35,9 +35,11 @@ export function uploadFailureMessage(file: Pick<File, 'type' | 'name'>, message:
   return message === UNSUPPORTED && looksHeic(file) ? 'upload.reason.heic' : message;
 }
 
-/** The JPEG's name: the HEIC extension replaced, else `.jpg` appended. */
+const EXTENSION = /\.[a-z0-9]{1,5}$/i;
+
+/** The JPEG's name: the file's extension replaced, else `.jpg` appended. */
 export function jpegName(name: string): string {
-  return HEIC_EXTENSION.test(name) ? name.replace(HEIC_EXTENSION, '.jpg') : `${name}.jpg`;
+  return EXTENSION.test(name) ? name.replace(EXTENSION, '.jpg') : `${name}.jpg`;
 }
 
 /** The size to draw at: the decoded size, scaled down (never up) to at most `MAX_JPEG_PIXELS`. */
@@ -69,7 +71,15 @@ export type HeicResult = { ok: true; file: File } | { ok: false; reason: 'unsupp
  * original file: `unsupported` when the browser cannot decode or encode it, `tooLarge` when even the lowest
  * quality is above `maxBytes`.
  */
-export async function convertHeic(file: File, maxBytes: number, browser: HeicBrowser = browserHeic): Promise<HeicResult> {
+export function convertHeic(file: File, maxBytes: number, browser: HeicBrowser = browserHeic): Promise<HeicResult> {
+  return toJpeg(file, maxBytes, browser);
+}
+
+/**
+ * Redraws any photo the browser decodes as a JPEG `File` of at most `maxBytes`, upright, scaled down to `MAX_JPEG_PIXELS`
+ * (`targetSize`), at the first of `JPEG_QUALITIES` that fits. Never throws and never answers with the original (see `convertHeic`).
+ */
+export async function toJpeg(file: File, maxBytes: number, browser: HeicBrowser = browserHeic): Promise<HeicResult> {
   let photo: Decoded;
   try {
     photo = await browser.decode(file);
