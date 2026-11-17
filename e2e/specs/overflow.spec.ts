@@ -432,6 +432,12 @@ for (const locale of locales) {
           .getByRole('button', { name: say(locale, 'studio.addGlazeStep') })
           .first()
           .click();
+        // The glaze of the seeded combination: Studio names it as one with the same glazes.
+        await main.getByRole('combobox', { name: say(locale, 'common.glaze') }).fill(`Celadon ${uid}`);
+        await page
+          .getByRole('option', { name: new RegExp(`Celadon ${uid}`) })
+          .first()
+          .click();
         await main
           .getByRole('button', { name: say(locale, 'studio.addCustomStep') })
           .last()
@@ -444,6 +450,10 @@ for (const locale of locales) {
       await expect(second).toBeVisible();
       await second.scrollIntoViewIfNeeded();
       await check('studio-steps');
+      const same = main.getByRole('region', { name: say(locale, 'studio.sameGlazes.title') });
+      await expect(same.getByRole('link', { name: `Prova ${uid}` })).toBeVisible();
+      await same.scrollIntoViewIfNeeded();
+      await check('studio-same-glazes');
       // The final firing is folded on phones.
       const firing = main.getByRole('button', { name: startingWith(locale, 'firing.title') });
       await firing.click();

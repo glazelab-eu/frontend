@@ -298,6 +298,10 @@ export async function seedLibrary(request: (label: string) => Promise<APIRequest
     // Four of the main account's own combinations wait for a photo.
     await make(author, picks, { photo: !(own && index % 4 === 0) });
   }
+  // Sage over Oatmeal by a buddy: Studio's walkthrough records the same glazes in the same order and is told so.
+  const oatmeal = GLAZES.findIndex((spec) => spec.name === 'Oatmeal');
+  const sage = GLAZES.findIndex((spec) => spec.name === 'Sage');
+  await make(people[1], [oatmeal, sage], { photo: true });
 
   // Glaze photos (a packaging picture and a test tile) on some glazes, tags and a corrected glaze for its history.
   for (const index of [0, 6, 12, 13, 18, 24, 31]) {

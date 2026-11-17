@@ -19,6 +19,7 @@
   import { studioLeaveQuestion } from '../../lib/studio/held-save';
   import { draftWorthSaving, saveDraftReason } from '../../lib/studio/save-draft';
   import { waitingList } from '../../lib/studio/waiting';
+  import { draftGlazeKey, sameGlazes } from '../../lib/studio/same-glazes';
   import { clayBodySuggestions, firingDraft, firingStarted } from '../../lib/firing/firing';
   import { routeHref, type Route } from '../../lib/routing/routes';
   import RouteStatus from '../../components/routing/RouteStatus.svelte';
@@ -35,6 +36,7 @@
   import StepEditor from '../../components/studio/StepEditor.svelte';
   import DraftList from '../../components/studio/DraftList.svelte';
   import WaitingList from '../../components/studio/WaitingList.svelte';
+  import SameGlazesNote from '../../components/studio/SameGlazesNote.svelte';
   import HeldSaveNote from '../../components/studio/HeldSaveNote.svelte';
   import FinalFiringSection from '../../components/studio/FinalFiringSection.svelte';
   import {
@@ -108,6 +110,12 @@
   /** Studio is where drafts live, so the writer's own drafts count here (nowhere else: see `published`). */
   let tagCounts = $derived(countTags(glazes, $appStore.combinations));
   let steps = $state(initialSteps());
+  /**
+   * A new combination or an own draft: the visible combinations with the same glazes in the same order, so the writer may add
+   * their photos there instead. Never the form's own combination or the one it is a variation of (a variation starts as its copy).
+   */
+  let glazeKey = $derived(drafting ? draftGlazeKey(steps) : null);
+  let same = $derived(sameGlazes(glazeKey, $appStore.combinations, [route.id, route.id ? editSource?.basedOnId : route.from]));
   /** A publish was refused for lack of a step; the message shows in the empty steps section until a step is added. */
   let stepRequired = $state(false);
   /** The final firing; earlier or extra firings are custom steps. */
@@ -653,6 +661,11 @@
             <div class="button-row">{@render addButtons()}</div>
           </div>
         {/if}
+        <SameGlazesNote
+          items={same.items}
+          total={same.total}
+          {online}
+          onAddPhoto={app.openUpload} />
       </section>
       <section class="panel">
         <PanelTitle title={$t('studio.details.title')} />

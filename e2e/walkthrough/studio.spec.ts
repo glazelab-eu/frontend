@@ -37,6 +37,17 @@ test('studio: record a combination with steps, coats, firing and a photo', async
     await human.type(main.getByPlaceholder(t('studio.step.notesPlaceholder')).last(), 'Thick on the rim');
   });
 
+  // A buddy has these glazes in this order already: Studio says so and offers to add the photos there.
+  await human.tryStep('same glazes', async () => {
+    await human.point(
+      main
+        .getByRole('region', { name: t('studio.sameGlazes.title') })
+        .getByRole('button', { name: t('studio.sameGlazes.addShort') })
+        .first(),
+    );
+    await human.pause(2500);
+  });
+
   // A custom step.
   await human.tryStep('custom step', async () => {
     await human.tap(main.getByRole('button', { name: t('studio.addCustomStep') }));
