@@ -34,6 +34,7 @@
   <div class="same-glazes">
     <Callout
       as="section"
+      id="same-glazes"
       tone="warm"
       aria-labelledby="same-glazes-title">
       <p
@@ -130,6 +131,11 @@
     font-size: var(--font-xs);
   }
   @media (pointer: coarse) {
+    .same-glazes__link {
+      display: inline-flex;
+      align-items: center;
+      min-height: var(--touch-target);
+    }
     .same-glazes__by,
     .same-glazes__more {
       font-size: var(--font-body);

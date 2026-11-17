@@ -799,6 +799,7 @@
   "studio.sameGlazes.addShort": "Añadir fotos",
   "studio.sameGlazes.add": "Añadir fotos a {title}",
   "studio.sameGlazes.more": "{count, plural, one {# más con estos esmaltes} other {# más con estos esmaltes}}",
+  "studio.sameGlazes.jump": "{count, plural, one {Una combinación ya tiene estos esmaltes} other {# combinaciones ya tienen estos esmaltes}}",
   "studio.saveDraftLater": "Guardar borrador al volver a estar en línea",
   "studio.publishLater": "Publicar al volver a estar en línea",
   "studio.edit.submitLater": "Guardar cambios al volver a estar en línea",

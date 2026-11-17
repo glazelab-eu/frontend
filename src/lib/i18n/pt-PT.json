@@ -799,6 +799,7 @@
   "studio.sameGlazes.addShort": "Adicionar fotografias",
   "studio.sameGlazes.add": "Adicionar fotografias a {title}",
   "studio.sameGlazes.more": "{count, plural, one {Mais # com estes vidrados} other {Mais # com estes vidrados}}",
+  "studio.sameGlazes.jump": "{count, plural, one {Uma combinação já tem estes vidrados} other {# combinações já têm estes vidrados}}",
   "studio.saveDraftLater": "Guardar rascunho quando voltar a ter ligação",
   "studio.publishLater": "Publicar quando voltar a ter ligação",
   "studio.edit.submitLater": "Guardar alterações quando voltar a ter ligação",

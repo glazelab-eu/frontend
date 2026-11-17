@@ -25,6 +25,7 @@
 - It informs and never blocks: the same order may be another test. Each match offers its page link and Add photos (`app.openUpload`, the upload dialog's rights and visibility rules); the form stays as it is.
 - Leave out the form's own combination and its source (`route.from`, a draft's `basedOnId`): a variation starts as a copy. Own matches first, at most `SAME_GLAZES_LIMIT`, the rest counted.
 - The summary is announced from a `role="status"` that stays mounted; the box's own copy is `aria-hidden`.
+- On phones the note is often below the screen while the sticky bar offers Publish: the bar carries a line with the count (`studio.sameGlazes.jump`) that scrolls the note into view and focuses its first link.
 
 ## Final firing (`studio/FinalFiringSection`, `lib/firing/firing.ts`)
 

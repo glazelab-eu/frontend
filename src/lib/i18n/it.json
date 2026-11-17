@@ -799,6 +799,7 @@
   "studio.sameGlazes.addShort": "Aggiungi foto",
   "studio.sameGlazes.add": "Aggiungi foto a {title}",
   "studio.sameGlazes.more": "{count, plural, one {Ancora # con questi smalti} other {Ancora # con questi smalti}}",
+  "studio.sameGlazes.jump": "{count, plural, one {Una combinazione ha già questi smalti} other {# combinazioni hanno già questi smalti}}",
   "studio.saveDraftLater": "Salva bozza quando torni online",
   "studio.publishLater": "Pubblica quando torni online",
   "studio.edit.submitLater": "Salva modifiche quando torni online",

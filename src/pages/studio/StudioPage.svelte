@@ -396,6 +396,13 @@
     }
   }
 
+  /** The phone bar's pointer: the note comes into view and its first combination takes the focus. */
+  function showSame() {
+    const note = document.getElementById('same-glazes');
+    note?.scrollIntoView({ block: 'center' });
+    note?.querySelector<HTMLElement>('a')?.focus({ preventScroll: true });
+  }
+
   /** Cancelling a held save unlocks the form; focus returns to the button that held it. */
   async function cancelHeld() {
     const action = held.request?.action;
@@ -774,6 +781,15 @@
         class={['studio-form__bar', { 'studio-form__bar--sticky': barSticky }]}
         role="group"
         aria-label={$t('studio.bar.label')}>
+        {#if same.total && !committed}
+          <!-- The note sits under the steps, often below the screen while the bar offers Publish: the bar points to it. -->
+          <button
+            type="button"
+            class="studio-form__same"
+            onclick={showSame}>
+            {$t('studio.sameGlazes.jump', { values: { count: same.total } })}
+          </button>
+        {/if}
         {@render saveButton()}
       </div>
     {:else}
@@ -889,6 +905,16 @@
     font-size: var(--font-xs);
     color: var(--muted);
   }
+  .studio-form__same {
+    justify-self: start;
+    border: 0;
+    background: none;
+    padding: var(--space-1) 0;
+    color: var(--accent);
+    font-weight: 600;
+    text-align: start;
+    text-decoration: underline;
+  }
   .studio-form__save--blocked {
     opacity: 0.5;
     cursor: not-allowed;
@@ -928,6 +954,9 @@
     .studio-form__add-step {
       min-height: var(--touch-target);
       font-size: var(--font-body);
+    }
+    .studio-form__same {
+      min-height: var(--touch-target);
     }
     .studio-form__variation {
       display: inline-flex;

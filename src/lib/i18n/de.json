@@ -799,6 +799,7 @@
   "studio.sameGlazes.addShort": "Fotos hinzufügen",
   "studio.sameGlazes.add": "Fotos hinzufügen zu {title}",
   "studio.sameGlazes.more": "{count, plural, one {# weitere mit diesen Glasuren} other {# weitere mit diesen Glasuren}}",
+  "studio.sameGlazes.jump": "{count, plural, one {Eine Kombination hat schon diese Glasuren} other {# Kombinationen haben schon diese Glasuren}}",
   "studio.saveDraftLater": "Entwurf speichern, sobald du wieder verbunden bist",
   "studio.publishLater": "Veröffentlichen, sobald du wieder verbunden bist",
   "studio.edit.submitLater": "Änderungen speichern, sobald du wieder verbunden bist",

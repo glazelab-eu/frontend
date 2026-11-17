@@ -38,6 +38,16 @@ test('names a combination with the same glazes in the same order, and adds the p
   await studio.addGlazeStep(glazes.names.blue);
   await expect(note(page)).toBeVisible();
   await expect(note(page)).toContainText(t('studio.sameGlazes.body', { count: 1 }));
+  // On a phone the note is under the open step, below the screen, while the sticky bar offers Publish: the bar points to it.
+  const jump = studio.main.getByRole('button', { name: t('studio.sameGlazes.jump', { count: 1 }) });
+  if (test.info().project.name === 'phone') {
+    await expect(jump).toBeInViewport();
+    await jump.click();
+    await expect(note(page).getByRole('link', { name: title })).toBeFocused();
+    await expect(note(page).getByRole('link', { name: title })).toBeInViewport();
+  } else {
+    await expect(jump).toHaveCount(0);
+  }
   await expect(note(page).getByRole('link', { name: title })).toHaveAttribute('href', `#/combinations/${existing}`);
   await expect(note(page)).toContainText(t('combination.variations.by', { name: cleoAccount.displayName }));
   await expect(

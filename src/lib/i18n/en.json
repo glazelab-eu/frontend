@@ -799,6 +799,7 @@
   "studio.sameGlazes.addShort": "Add photos",
   "studio.sameGlazes.add": "Add photos to {title}",
   "studio.sameGlazes.more": "{count, plural, one {# more with these glazes} other {# more with these glazes}}",
+  "studio.sameGlazes.jump": "{count, plural, one {A combination already has these glazes} other {# combinations already have these glazes}}",
   "studio.saveDraftLater": "Save draft when back online",
   "studio.publishLater": "Publish when back online",
   "studio.edit.submitLater": "Save changes when back online",
