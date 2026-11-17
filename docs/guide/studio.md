@@ -19,6 +19,14 @@
 - Every step can be removed. The server allows a draft without steps and refuses publishing or saving a published combination without one: say `errors.combinationStepRequired` in the panel before sending (also offline, where nothing is held).
 - A new combination's Save draft needs `draftWorthSaving` (`lib/studio/save-draft.ts`; blank steps alone do not count). Without it the button is `aria-disabled` (focusable, described by `saveDraftReason`; `disabled` only while saving), and the leave guard does not ask.
 
+## Same glazes (`studio/SameGlazesNote`, `lib/studio/same-glazes.ts`)
+
+- A new combination or an own draft names the loaded combinations whose glaze steps have the same glazes in the same order (`draftGlazeKey`; coats, methods and custom steps do not count); never while a glaze step has no glaze, never in the edit of a published one.
+- It informs and never blocks: the same order may be another test. Each match offers its page link and Add photos (`app.openUpload`, the upload dialog's rights and visibility rules); the form stays as it is.
+- Leave out the form's own combination and its source (`route.from`, a draft's `basedOnId`): a variation starts as a copy. Own matches first, at most `SAME_GLAZES_LIMIT`, the rest counted.
+- The summary is announced from a `role="status"` that stays mounted; the box's own copy is `aria-hidden`.
+- On phones the note is often below the screen while the sticky bar offers Publish: the bar carries a line with the count (`studio.sameGlazes.jump`) that scrolls the note into view and focuses its first link.
+
 ## Final firing (`studio/FinalFiringSection`, `lib/firing/firing.ts`)
 
 - Optional fields after the steps; earlier or extra firings are custom steps. The date shares the photo date range (`EARLIEST_FIRED_ON`/`LATEST_FIRED_ON`, the API's 1900..2100).
