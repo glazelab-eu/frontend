@@ -1,7 +1,7 @@
 /** What `viewportStuck` reads of `window.visualViewport`. */
 type Viewport = Pick<VisualViewport, 'offsetTop' | 'height' | 'scale'>;
 
-/** Wait after the last scroll, resize or focus change before checking (ms): the keyboard has finished closing. */
+/** Wait after the last scroll, resize, focus or app switch before checking (ms): the keyboard has finished closing. */
 export const STUCK_SETTLE = 150;
 
 /**
@@ -14,29 +14,55 @@ export function viewportStuck(viewport: Viewport, innerHeight: number): boolean 
   return Math.abs(viewport.scale - 1) <= 0.01 && (viewport.offsetTop > 0.5 || innerHeight - viewport.height > 1);
 }
 
+/**
+ * Whether a Home Screen app's window is stuck short: over 4 px shorter than the tallest it has been at this width. iOS 17 and 18 can keep
+ * `innerHeight`, the visual viewport and `100dvh` all at the height they had with the keyboard up, so `viewportStuck` sees nothing while the
+ * fixed bars float that far above the screen's foot. Only for standalone: in the browser its toolbars shorten the window on purpose.
+ */
+export function windowShort(innerHeight: number, tallest: number): boolean {
+  return innerHeight < tallest - 4;
+}
+
 /** Whether focus is in a field, so the soft keyboard may be up. */
 const typing = (element: Element | null) => !!element && ((element as HTMLElement).isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(element.tagName));
 
 /**
- * Scrolls the page 1 px and back once per occurrence of `viewportStuck`, `STUCK_SETTLE` ms after scrolling, resizing and focus settled and
- * never while typing: iOS then lays the viewport out again and the fixed bars return to their edges (the same nudge confirmed on an iPhone
- * in Sedna.UI #172). Answers the cleanup; does nothing where `visualViewport` is missing.
+ * Puts the fixed bars back where iOS left them mid-screen, once per occurrence, `STUCK_SETTLE` ms after things settled and never while typing:
+ * a stuck viewport (`viewportStuck`) gets the page scrolled 1 px and back (confirmed on an iPhone in Sedna.UI #172); a Home Screen app's window
+ * stuck short (`windowShort`) first gets `root` emptied for one synchronous layout, never painted, with its scroll and focus kept, which makes
+ * iOS measure the window again. Answers the cleanup; does nothing where `visualViewport` is missing.
  */
-export function watchStuckViewport(): () => void {
+export function watchStuckViewport(root: HTMLElement): () => void {
   const viewport = window.visualViewport;
   if (!viewport) return () => {};
+  const standalone = window.matchMedia?.('(display-mode: standalone)');
+  /** The tallest window seen per width, so a turn of the phone is not taken for a short window. */
+  const tallest = new Map<number, number>();
   let settle: ReturnType<typeof setTimeout> | undefined;
   let back: ReturnType<typeof setTimeout> | undefined;
-  let nudged = false;
+  let fixed = false;
+  const relayout = () => {
+    const { scrollX, scrollY } = window;
+    const focused = document.activeElement as HTMLElement | null;
+    root.style.display = 'none';
+    void root.offsetHeight;
+    root.style.display = '';
+    window.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' });
+    focused?.focus?.({ preventScroll: true });
+  };
   const check = () => {
-    if (!viewportStuck(viewport, window.innerHeight)) nudged = false;
-    else if (!nudged && !typing(document.activeElement)) {
-      nudged = true;
-      const step = window.scrollY > 0 ? -1 : 1;
-      window.scrollBy({ top: step, behavior: 'instant' });
-      // A timer, not a frame: iOS may not paint the stuck page, and a frame would wait for it. Its own timer: the nudge's scroll restarts `settle`.
-      back = setTimeout(() => window.scrollBy({ top: -step, behavior: 'instant' }), 50);
-    }
+    const { innerWidth: width, innerHeight: height } = window;
+    const top = Math.max(tallest.get(width) ?? 0, height);
+    tallest.set(width, top);
+    const short = !!standalone?.matches && windowShort(height, top);
+    if (!short && !viewportStuck(viewport, height)) return void (fixed = false);
+    if (fixed || typing(document.activeElement)) return;
+    fixed = true;
+    if (short) relayout();
+    const step = window.scrollY > 0 ? -1 : 1;
+    window.scrollBy({ top: step, behavior: 'instant' });
+    // A timer, not a frame: iOS may not paint the stuck page, and a frame would wait for it. Its own timer: the nudge's scroll restarts `settle`.
+    back = setTimeout(() => window.scrollBy({ top: -step, behavior: 'instant' }), 50);
   };
   const later = () => {
     clearTimeout(settle);
@@ -45,11 +71,14 @@ export function watchStuckViewport(): () => void {
   const events: [EventTarget, string][] = [
     [window, 'scroll'],
     [window, 'resize'],
+    [window, 'pageshow'],
     [document, 'focusout'],
+    [document, 'visibilitychange'],
     [viewport, 'scroll'],
     [viewport, 'resize'],
   ];
   for (const [target, type] of events) target.addEventListener(type, later, { passive: true });
+  later();
   return () => {
     clearTimeout(settle);
     clearTimeout(back);
